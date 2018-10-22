@@ -5,11 +5,6 @@ from time import sleep
 from database import db
 import config
 
-from models import user
-from models import session
-
-from blueprints.auth import auth
-
 
 def create_app() -> Flask:
     """
@@ -58,4 +53,4 @@ def register_blueprints(app: Flask) -> None:
     :param app: The "raw" flask app
     :return: None
     """
-    app.register_blueprint(auth, url_prefix="/auth")
+    pass
