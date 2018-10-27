@@ -1,9 +1,8 @@
-"""The app module, containing the app factory function."""
 from flask import Flask
+from config import config
+from objects import db, api
 from flask_cors import CORS
 from time import sleep
-from database import db
-import config
 
 
 def create_app() -> Flask:
@@ -13,44 +12,64 @@ def create_app() -> Flask:
     :return: The initialized flask app
     """
 
-    app = Flask("cryptic")
+    app: Flask = Flask("cryptic")
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = config.get_database_uri()
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-    if config.config["CROSS_ORIGIN"]:
-        CORS(app)
+    app.config.update(**config)
 
     with app.app_context():
-        db.init_app(app=app)
-        while True:
-            try:
-                register_models()
-                break
-            except Exception as e:
-                print(e)
-                sleep(2)
+        if config["CROSS_ORIGIN"]:
+            CORS(app)
 
-    register_blueprints(app)
+        register_extensions(app)
+
+        register_namespaces()
+
+        setup_database()
+
+        if config["DEBUG"]:
+            setup_development_environment()
 
     return app
 
 
-def register_models() -> None:
+def register_extensions(app: Flask) -> None:
     """
-    This function registers all database models.
-
-    :return: None
+    Registers flask extensions, such as the sqlalchemy.
     """
-    db.create_all()
-    db.session.commit()
+
+    db.init_app(app)
+    api.init_app(app)
 
 
-def register_blueprints(app: Flask) -> None:
+def register_namespaces() -> None:
     """
-    This function registers all flask blueprints.
-
-    :param app: The "raw" flask app
-    :return: None
+    This function registers all flask resources.
     """
+
     pass
+
+
+def setup_database() -> None:
+    """
+    Sets the database up.
+    """
+
+    while True:
+        try:
+            db.create_all()
+            break
+        except Exception as e:
+            sleep(2)
+
+
+def setup_development_environment() -> None:
+    """
+    Setup the development environment
+    """
+
+    pass
+
+
+if __name__ == '__main__':
+    app: Flask = create_app()
+    app.run()
