@@ -11,6 +11,7 @@ Flask-Cors = "*"
 PyMySQL = "*"
 gunicorn = "*"
 flask-restplus = "*"
+requests = "*"
 
 [dev-packages]
 
