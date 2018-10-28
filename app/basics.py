@@ -5,3 +5,7 @@ from objects import api
 ErrorSchema: Model = api.model("Error", {
     "message": fields.String(readOnly=True)
 })
+
+SuccessSchema: Model = api.model("Success", {
+    "ok": fields.Boolean(readOnly=True)
+})
