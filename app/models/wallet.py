@@ -21,10 +21,13 @@ class WalletModel(db.Model):
         :return: New wallet
         """
 
+        uuid: str = str(uuid4()).replace("-", "")
+        key: str = str(uuid4()).replace("-", "") + str(uuid4()).replace("-", "")
+
         # Create a new Wallet instance
         wallet: WalletModel = WalletModel(
-            uuid=str(uuid4()).replace("-", ""),
-            key=str(uuid4()).replace("-", "") + str(uuid4()).replace("-", ""),
+            uuid=uuid,
+            key=key,
             amount=0
         )
 
