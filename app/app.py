@@ -3,6 +3,7 @@ from config import config
 from objects import db, api
 from flask_cors import CORS
 from time import sleep
+from resources.wallet import wallet_api
 
 
 def create_app() -> Flask:
@@ -46,7 +47,7 @@ def register_namespaces() -> None:
     This function registers all flask resources.
     """
 
-    pass
+    api.add_namespace(wallet_api)
 
 
 def setup_database() -> None:
@@ -72,5 +73,5 @@ def setup_development_environment() -> None:
 
 if __name__ == '__main__':
     app: Flask = create_app()
-    app.run()
+    app.run(host='0.0.0.0', port=1242)
 
