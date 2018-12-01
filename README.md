@@ -5,8 +5,12 @@ The official currency microservice of Cryptic (https://cryptic-game.net/).
 
 ## Testing with Docker
 
+You will need root permissons run all commands with `sudo`
+
 If you want to test this microservice you can simply build and run a 
 container with docker-compose:
+
+`pip install docker-compose`
 
 `docker-compose up -d`
 
