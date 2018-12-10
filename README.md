@@ -5,7 +5,9 @@ The official currency microservice of Cryptic (https://cryptic-game.net/).
 
 ## Testing with Docker
 
-You will need root permissons run all commands with `sudo`
+You will need root permissons. To run all commands write `sudo` infront of them.
+
+On Windows use the commandline with administrator permissions.
 
 If you want to test this microservice you can simply build and run a 
 container with docker-compose:
