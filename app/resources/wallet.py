@@ -1,125 +1,88 @@
-from flask_restplus import Namespace, Resource, fields, abort
-from basics import ErrorSchema, require_session
-from objects import api, db
-from flask import request
-from models.wallet import WalletModel
-from functools import wraps
-from typing import Optional
-
-WalletCreateTransferRequestSchema = api.model("Wallet Create Transfer Request", {
-    "recipient": fields.String(example="12abc34d5efg67hi89j1klm2nop3pqrs",
-                               description="recipient of the 'money'",
-                               required=True),
-    "amount": fields.Integer(example="1234",
-                             desription="the mount of 'money' the recipient will receive",
-                             required=True)
-})
-
-WalletResponseSchema = api.model("Wallet Response", {
-    "uuid": fields.String(example="12abc34d5efg67hi89j1klm2nop3pqrs",
-                          description="the wallets's public uuid"),
-    "key": fields.String(example="12abc34d5efg67hi89j1klm2nop3pqrs12abc34d5efg67hi89j1klm2nop3pqrs",
-                         description="the wallets's key"),
-    "amount": fields.String(example="1234",
-                            description="the wallets's value")
-})
+from cryptic import MicroService
+from models.wallet import Wallet, db
 
 
-def require_wallet(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if 'Key' in request.headers:
-            key: str = request.headers["Key"]
-
-            if len(key) != 64:
-                abort(400, "invalid formatted key")
-
-            kwargs["key"] = key
-
-            return f(*args, **kwargs)
-        else:
-            abort(400, "key required")
-
-    return wrapper
-
-
-def get_wallet(uuid, key) -> Optional[WalletModel]:
+def handle(endpoint: list, data: dict) -> dict:
     """
-    Tries to get the wallet by the wallets uuid and key
-    :param uuid: the wallet's uuid
-    :param key: the wallet's key
-    :return: maybe the WalletModel
+    The handle method to get data from server to know what to do
+    :param endpoint: the action of the server 'get', 'create', 'send'
+    :param data: source_uuid, key, send_amount, destination_uuid ...
+    :return: wallet response for actions
     """
-    wallet: Optional[WalletModel] = WalletModel.query.filter_by(uuid=uuid).first()
+    # test the casting
+    try:
+        str(data['user_uuid'])
+        str(data['source_uuid'])
+        str(data['key'])
+        int(data['send_amount'])
+        str(data['destination_uuid'])
+        str(data['usage'])
+    except ValueError:
+        return {"wallet_response": "Your input data is in a wrong format!", "user_uuid": "str", "source_uuid": "str",
+                "key": "str", "send_amount": "int", "destination_uuid": "str",
+                "usage": "str"}
+    except KeyError:
+        pass
+    # every time the handle method is called, a new wallet object is created
+    # wallet: Wallet = Wallet()
+    db.base.metadata.create_all(bind=db.engine)
+    # endpoint[0] will be the action what to do in an array ['get', ...]
+    if endpoint[0] == 'create':
+        try:
+            user_uuid: str = data['user_uuid']
+        except KeyError:
+            return {"wallet_response": "Key 'user_uuid' have to be set for endpoint create."}
+        wallet_response: dict = Wallet.create(user_uuid)
+    elif endpoint[0] == 'get':
+        try:
+            source_uuid: str = data['source_uuid']
+            key: str = data['key']
+        except KeyError:
+            return {"wallet_response": "Keys 'source_uuid' and 'key' have to be set for endpoint get."}
+        wallet_response: dict = Wallet.get(source_uuid, key)
+    elif endpoint[0] == 'send':
+        try:
+            usage: str = data['usage']
+        except KeyError:
+            usage: str = ''
+        try:
+            source_uuid: str = data['source_uuid']
+            key: str = data['key']
+            send_amount: int = data['send_amount']
+            destination_uuid: str = data['destination_uuid']
+        except KeyError:
+            return {"wallet_response": "Keys 'source_uuid' and 'key' and 'send_amount' "
+                                       "and 'destination_uuid' have to be set for endpoint send."
+                                       "You can also use key 'usage' for specify your transfer."}
+        wallet_response: dict = Wallet.send_coins(source_uuid, key, send_amount, destination_uuid, usage)
+    elif endpoint[0] == 'reset':
+        try:
+            source_uuid: str = data['source_uuid']
+        except KeyError:
+            return {"wallet_response": "Key 'source_uuid' has to be set for the endpoint reset."}
+        wallet_response: dict = Wallet.reset(source_uuid)
+    elif endpoint[0] == 'gift':
+        try:
+            send_amount: int = data['send_amount']
+            source_uuid: str = data['source_uuid']
+        except KeyError:
+            return {"wallet_response": "Keys 'source_uuid' and 'send_amount' have to be set for endpoint gift."}
+        wallet_response: dict = Wallet.gift(send_amount, source_uuid)
+    elif endpoint[0] == 'delete':
+        try:
+            source_uuid: str = data['source_uuid']
+        except KeyError:
+            return {"wallet_response": "Key 'source_uuid' has to be set for endpoint delete."}
+        wallet_response: dict = Wallet.delete(source_uuid)
+    else:
+        wallet_response: dict = {"error": "Endpoint is not supported."}
+    return {"wallet_response": wallet_response}
 
-    if wallet is None:
-        abort(404, "invalid wallet uuid")
 
-    if wallet.key != key:
-        abort(403, "no access to this wallet")
-
-    return wallet
+def handle_ms(ms, data, tag):
+    print(ms, data, tag)
 
 
-wallet_api = Namespace('wallet')
-
-
-@wallet_api.route('')
-@wallet_api.doc("Wallet Application Programming Interface")
-class WalletAPI(Resource):
-
-    @wallet_api.doc("Create a wallet", security="token")
-    @wallet_api.marshal_with(WalletResponseSchema)
-    @wallet_api.response(400, "Invalid Input", ErrorSchema)
-    @require_session
-    def put(self, session):
-        return WalletModel.create().serialize
-
-
-@wallet_api.route('/<string:uuid>')
-@wallet_api.doc("Wallet Modification Application Programming Interface")
-class WalletModificationAPI(Resource):
-
-    @wallet_api.doc("Get data about the wallet", security="token")
-    @wallet_api.marshal_with(WalletResponseSchema)
-    @wallet_api.response(400, "Invalid Input", ErrorSchema)
-    @wallet_api.response(403, "No Access", ErrorSchema)
-    @wallet_api.response(404, "Not Found", ErrorSchema)
-    @require_session
-    @require_wallet
-    def get(self, session, key, uuid):
-        wallet: Optional[WalletModel] = get_wallet(uuid, key)
-        return wallet.serialize
-
-    @wallet_api.doc("Send money to someone", security="token")
-    @wallet_api.marshal_with(WalletResponseSchema)
-    @wallet_api.expect(WalletCreateTransferRequestSchema, validate=True)
-    @wallet_api.response(400, "Invalid Input", ErrorSchema)
-    @wallet_api.response(403, "No Access", ErrorSchema)
-    @wallet_api.response(404, "Not Found", ErrorSchema)
-    @require_session
-    @require_wallet
-    def post(self, session, key, uuid):
-        wallet: Optional[WalletModel] = get_wallet(uuid, key)
-        amount: int = request.json["amount"]
-
-        if amount < 0:
-            abort(400, "invalid amount to send")
-        elif amount > wallet.amount:
-            abort(400, "not enough money")
-
-        recipient: str = request.json["recipient"]
-
-        if len(recipient) != 32:
-            abort(400, "invalid recipient uuid")
-
-        recipient: Optional[WalletModel] = WalletModel.query.filter_by(uuid=recipient).first()
-
-        if recipient is None:
-            abort(404, "unknown recipient uuid")
-
-        recipient.amount += amount
-        wallet.amount -= amount
-        db.session.commit()
-
-        return wallet.serialize
+if __name__ == '__main__':
+    m = MicroService('wallet', handle, handle_ms)
+    m.run()
