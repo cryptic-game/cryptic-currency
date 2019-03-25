@@ -79,10 +79,10 @@ def handle(endpoint: list, data: dict) -> dict:
     return {"wallet_response": wallet_response}
 
 
-def handle_ms(ms, data, tag):
-    print(ms, data, tag)
+def handle_ms(ms: str, data: dict, tag: str) -> dict:
+    return {"ms": ms, "data": data, "tag": tag}
 
 
 if __name__ == '__main__':
-    m = MicroService('wallet', handle, handle_ms)
+    m: MicroService = MicroService('wallet', handle, handle_ms)
     m.run()
