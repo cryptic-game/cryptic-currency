@@ -9,10 +9,10 @@ class Transaction(db.base):
 
     id: Column = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     time_stamp: Column = Column(DateTime, nullable=False)
-    source_uuid: Column = Column(String(32))
+    source_uuid: Column = Column(String(36))
     send_amount: Column = Column(Integer, nullable=False, default=0)
-    destination_uuid: Column = Column(String(32))
-    usage: Column = Column(String(64), default='')
+    destination_uuid: Column = Column(String(36))
+    usage: Column = Column(String, default='')
 
     @property
     def serialize(self) -> dict:
@@ -45,7 +45,7 @@ class Transaction(db.base):
         for i in db.session.query(Transaction).filter(or_(Transaction.source_uuid == source_uuid,
                                                           Transaction.destination_uuid == source_uuid)):
             transactions.append({"time_stamp": str(i.time_stamp), "source_uuid": str(i.source_uuid),
-                                 "amount": i.send_amount, "destination_uuid": str(i.destination_uuid),
+                                 "amount": int(i.send_amount), "destination_uuid": str(i.destination_uuid),
                                  "usage": str(i.usage)})
         return transactions
 
@@ -54,10 +54,10 @@ class Wallet(db.base):
     __tablename__: str = "wallet"
 
     time_stamp: Column = Column(DateTime, nullable=False)
-    source_uuid: Column = Column(String(32), primary_key=True, unique=True)
+    source_uuid: Column = Column(String(36), primary_key=True, unique=True)
     key: Column = Column(String(16))
     amount: Column = Column(Integer, nullable=False, default=0)
-    user_uuid: Column = Column(String(32), unique=True)
+    user_uuid: Column = Column(String(36), unique=True)
 
     # auf objekt serialize anwenden und dann kriege ich aus objekt ein dict zurueck
     @property
@@ -75,7 +75,7 @@ class Wallet(db.base):
         if user_uuid == "":
             return {"error": "You have to paste the user uuid to create a wallet."}
 
-        source_uuid: str = str(uuid4()).replace("-", "")
+        source_uuid: str = str(uuid4())
         # uuid is 32 chars long -> now key is 10 chars long
         key: str = str(uuid4()).replace("-", "")[:10]
 
@@ -149,7 +149,7 @@ class Wallet(db.base):
             return {"error": "Source UUID is empty."}
         if not db.session.query(exists().where(Wallet.source_uuid == source_uuid)).scalar():
             return {"error": "Source UUID does not exist."}
-        key: str = str(uuid4()).replace("-", "")[:10]
+        key: str = str(uuid4())[:10]
         db.session.query(Wallet).filter(Wallet.source_uuid == source_uuid).update({'key': key})
         db.session.commit()
         return {"success": "Your wallet key has been updated.", "uuid": str(source_uuid), "key": str(key)}
@@ -185,3 +185,6 @@ class Wallet(db.base):
         print("–––––––––––––––––––––––––––––––––|––––––––––––|––––––––––––––––––––––––––––––––––––––––––––––––––––––––")
         for user_wallet in db.session.query(Wallet).all():
             print(user_wallet.source_uuid, user_wallet.key, user_wallet.user_uuid, user_wallet.amount, sep=' | ')
+
+
+db.base.metadata.create_all(bind=db.engine)
