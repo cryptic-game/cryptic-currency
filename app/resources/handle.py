@@ -1,5 +1,4 @@
-from cryptic import MicroService
-from models.wallet import Wallet
+from models.wallet_db import Wallet
 
 
 def handle(endpoint: list, data: dict) -> dict:
@@ -88,10 +87,5 @@ def handle(endpoint: list, data: dict) -> dict:
     return {"wallet_response": wallet_response}
 
 
-def handle_ms(ms: str, data: dict, tag: str) -> dict:
-    return {"ms": ms, "data": data, "tag": tag}
-
-
-if __name__ == '__main__':
-    m: MicroService = MicroService('wallet', handle, handle_ms)
-    m.run()
+def handle_ms(data: dict) -> dict:
+    return data

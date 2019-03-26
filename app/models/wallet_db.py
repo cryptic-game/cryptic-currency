@@ -1,53 +1,8 @@
 from uuid import uuid4
 import objects_init as db
-from sqlalchemy import Column, Integer, String, DateTime, exists, and_, or_
+from sqlalchemy import Column, Integer, String, DateTime, exists, and_
 import datetime
-
-
-class Transaction(db.base):
-    __tablename__: str = "transaction"
-
-    id: Column = Column(Integer, primary_key=True, autoincrement=True, unique=True)
-    time_stamp: Column = Column(DateTime, nullable=False)
-    source_uuid: Column = Column(String(36))
-    send_amount: Column = Column(Integer, nullable=False, default=0)
-    destination_uuid: Column = Column(String(36))
-    usage: Column = Column(String, default='')
-
-    @property
-    def serialize(self) -> dict:
-        _ = self.id
-        return {**self.__dict__}
-
-    @staticmethod
-    def create(source_uuid: str, send_amount: int, destination_uuid: str, usage: str):
-        # create transaction and add it to database
-        """
-        Returns a transaction of a source_uuid.
-        :return: transactions
-        """
-        # Create a new TransactionModel instance
-        transaction: Transaction = Transaction(
-            time_stamp=datetime.datetime.now(),
-            source_uuid=source_uuid,
-            send_amount=send_amount,
-            destination_uuid=destination_uuid,
-            usage=usage
-        )
-
-        # Add the new transaction to the db
-        db.session.add(transaction)
-        db.session.commit()
-
-    @staticmethod
-    def get(source_uuid):
-        transactions: list = []
-        for i in db.session.query(Transaction).filter(or_(Transaction.source_uuid == source_uuid,
-                                                          Transaction.destination_uuid == source_uuid)):
-            transactions.append({"time_stamp": str(i.time_stamp), "source_uuid": str(i.source_uuid),
-                                 "amount": int(i.send_amount), "destination_uuid": str(i.destination_uuid),
-                                 "usage": str(i.usage)})
-        return transactions
+from models.transaction_db import Transaction
 
 
 class Wallet(db.base):
@@ -132,8 +87,7 @@ class Wallet(db.base):
             .update({'amount': destination_uuid_amount + send_amount})
         db.session.commit()
         # insert transaction into table db transactions
-        transaction = Transaction()
-        transaction.create(source_uuid, send_amount, destination_uuid, usage)
+        Transaction.create(source_uuid, send_amount, destination_uuid, usage)
         # successful status mail with transfer information
         return {"success": "Transfer of " + str(send_amount) + " morph coins from " + str(source_uuid) +
                            " to " + str(destination_uuid) + " successful!"}
