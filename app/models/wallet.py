@@ -91,7 +91,7 @@ class Wallet(db.base):
         # Add the new wallet to the db
         db.session.add(wallet)
         db.session.commit()
-        return {"status": "Your wallet has been created. ", "uuid": str(source_uuid), "key": str(key)}
+        return {"success": "Your wallet has been created. ", "uuid": str(source_uuid), "key": str(key)}
 
     # for checking the amount of morph coins and transactions
     @staticmethod
@@ -103,7 +103,7 @@ class Wallet(db.base):
             return {"error": "Your UUID or wallet key is wrong or you have to create a wallet."}
         amount: int = db.session.query(Wallet).get(source_uuid).amount
         # transactions = db.session.query(Wallet)
-        return {"amount": amount, "transactions": Transaction.get(source_uuid)}
+        return {"success": {"amount": amount, "transactions": Transaction.get(source_uuid)}}
 
     @staticmethod
     def send_coins(source_uuid: str, key: str, send_amount: int, destination_uuid: str, usage: str = "") -> dict:
@@ -135,8 +135,8 @@ class Wallet(db.base):
         transaction = Transaction()
         transaction.create(source_uuid, send_amount, destination_uuid, usage)
         # successful status mail with transfer information
-        return {"status": "Transfer of " + str(send_amount) + " morph coins from " + str(source_uuid) +
-                          " to " + str(destination_uuid) + " successful!"}
+        return {"success": "Transfer of " + str(send_amount) + " morph coins from " + str(source_uuid) +
+                           " to " + str(destination_uuid) + " successful!"}
 
     @staticmethod
     def auth_user(source_uuid: str, key: str) -> bool:
@@ -152,7 +152,7 @@ class Wallet(db.base):
         key: str = str(uuid4()).replace("-", "")[:10]
         db.session.query(Wallet).filter(Wallet.source_uuid == source_uuid).update({'key': key})
         db.session.commit()
-        return {"status": "Your wallet key has been updated.", "uuid": str(source_uuid), "key": str(key)}
+        return {"success": "Your wallet key has been updated.", "uuid": str(source_uuid), "key": str(key)}
 
     @staticmethod
     def gift(send_amount: int, destination_uuid: str) -> dict:
@@ -160,7 +160,7 @@ class Wallet(db.base):
             return {"error": "You can only send an absolute amount. 0 is not included."}
         amount = db.session.query(Wallet).filter(Wallet.source_uuid == destination_uuid).first().amount
         db.session.query(Wallet).filter(Wallet.source_uuid == destination_uuid).update({'amount': amount + send_amount})
-        return {"status": "Gift of " + str(send_amount) + " to " + str(destination_uuid) + " successful!"}
+        return {"success": "Gift of " + str(send_amount) + " to " + str(destination_uuid) + " successful!"}
 
     @staticmethod
     def delete(source_uuid: str) -> dict:
@@ -168,7 +168,7 @@ class Wallet(db.base):
             return {"error": "Source UUID does not exist."}
         db.session.query(Wallet).filter(Wallet.source_uuid == source_uuid).delete(synchronize_session=False)
         db.session.commit()
-        return {"status": "Deletion of " + str(source_uuid) + " successful."}
+        return {"success": "Deletion of " + str(source_uuid) + " successful."}
 
     @staticmethod
     def delete_all_wallets():
