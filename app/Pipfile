@@ -5,7 +5,8 @@ name = "pypi"
 
 [packages]
 SQLAlchemy = "*"
-microservicecryp = "*"
+cryptic-game = "*"
+uuid = "*"
 
 [dev-packages]
 
@@ -13,4 +14,5 @@ microservicecryp = "*"
 python_version = "3.7"
 
 [scripts]
-prod = "python3 app.py"
+dev = "python3 app.py"
+prod = "gunicorn --workers 4 app:create_app() --bind 0.0.0.0:80 --log-syslog --log-level DEBUG"

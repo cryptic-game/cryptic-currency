@@ -1,13 +1,13 @@
-from sqlalchemy import orm
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from config import config
-import sqlalchemy
 
-base = declarative_base()
+uri: str = 'sqlite:///' + config["STORAGE_LOCATION"] + 'wallet.db'
 
-# "storage location" environment variables
-uri = "sqlite:///" + config['STORAGE_LOCATION'] + "wallet.db"
-engine = sqlalchemy.create_engine(uri)
-base.metadata.bind = engine
-Session = orm.sessionmaker(bind=engine)
-session = Session()
+# uri : str = 'mysql://user:password@localhost/database'
+
+engine = create_engine(uri)
+Session = sessionmaker(bind=engine)
+Base = declarative_base()
+session: Session = Session()

@@ -1,6 +1,9 @@
-from cryptic import MicroService
-from resources.handle import handle, handle_ms
+from objects_init import engine, Base
+from resources.handle import m
+
 
 if __name__ == '__main__':
-    m: MicroService = MicroService('wallet', handle, handle_ms)
+    
+    Base.metadata.create_all(bind=engine)
+
     m.run()

@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, DateTime, or_
 import datetime
 
 
-class Transaction(db.base):
+class Transaction(db.Base):
     __tablename__: str = "transaction"
 
     id: Column = Column(Integer, primary_key=True, autoincrement=True, unique=True)
