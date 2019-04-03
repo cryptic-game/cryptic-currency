@@ -4,14 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-Flask = "*"
-Flask-SQLAlchemy = "*"
 SQLAlchemy = "*"
-Flask-Cors = "*"
-PyMySQL = "*"
-gunicorn = "*"
-flask-restplus = "*"
-requests = "*"
+cryptic-game = "*"
+uuid = "*"
 
 [dev-packages]
 
@@ -19,5 +14,5 @@ requests = "*"
 python_version = "3.7"
 
 [scripts]
-dev = "python app.py"
+dev = "python3 app.py"
 prod = "gunicorn --workers 4 app:create_app() --bind 0.0.0.0:80 --log-syslog --log-level DEBUG"
