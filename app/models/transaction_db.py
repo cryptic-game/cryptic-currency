@@ -1,22 +1,25 @@
-import objects_init as db
-from sqlalchemy import Column, Integer, String, DateTime, or_
 import datetime
+from typing import Union
+
+from sqlalchemy import Column, Integer, String, DateTime, or_
+
+import objects_init as db
 
 
 class Transaction(db.Base):
     __tablename__: str = "transaction"
 
-    id: Column = Column(Integer, primary_key=True, autoincrement=True, unique=True)
-    time_stamp: Column = Column(DateTime, nullable=False)
-    source_uuid: Column = Column(String(36))
-    send_amount: Column = Column(Integer, nullable=False, default=0)
-    destination_uuid: Column = Column(String(36))
-    usage: Column = Column(String, default='')
+    id: Union[Column, int] = Column(Integer, primary_key=True, autoincrement=True, unique=True)
+    time_stamp: Union[Column, datetime.datetime] = Column(DateTime, nullable=False)
+    source_uuid: Union[Column, str] = Column(String(36))
+    send_amount: Union[Column, int] = Column(Integer, nullable=False, default=0)
+    destination_uuid: Union[Column, str] = Column(String(36))
+    usage: Union[Column, str] = Column(String, default='')
 
     @property
     def serialize(self) -> dict:
         _ = self.id
-        return {**self.__dict__}
+        return self.__dict__
 
     @staticmethod
     def create(source_uuid: str, send_amount: int, destination_uuid: str, usage: str):

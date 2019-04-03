@@ -1,23 +1,25 @@
-from uuid import uuid4
-import objects_init as db
-from sqlalchemy import Column, Integer, String, DateTime, exists, and_
 import datetime
+from typing import Union
+from uuid import uuid4
+
+from sqlalchemy import Column, Integer, String, DateTime, exists, and_
+
+import objects_init as db
 
 
 class Wallet(db.Base):
     __tablename__: str = "wallet"
 
-    time_stamp: Column = Column(DateTime, nullable=False)
-    source_uuid: Column = Column(String(36), primary_key=True, unique=True)
-    key: Column = Column(String(16))
-    amount: Column = Column(Integer, nullable=False, default=0)
-    user_uuid: Column = Column(String(36), unique=True)
+    time_stamp: Union[Column, datetime.datetime] = Column(DateTime, nullable=False)
+    source_uuid: Union[Column, str] = Column(String(36), primary_key=True, unique=True)
+    key: Union[Column, str] = Column(String(16))
+    amount: Union[Column, int] = Column(Integer, nullable=False, default=0)
+    user_uuid: Union[Column, str] = Column(String(36), unique=True)
 
-    # auf objekt serialize anwenden und dann kriege ich aus objekt ein dict zurueck
     @property
     def serialize(self) -> dict:
         _ = self.source_uuid
-        return {**self.__dict__}
+        return self.__dict__
 
     @staticmethod
     def create(user_uuid: str) -> dict:

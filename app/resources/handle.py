@@ -1,7 +1,8 @@
 from cryptic import MicroService
-from objects_init import session, Base, engine
+
 from models.transaction_db import Transaction
 from models.wallet_db import Wallet
+from objects_init import session
 from schemes import *
 
 m: MicroService = MicroService('wallet')
@@ -81,9 +82,4 @@ def delete(data: dict, user: str) -> dict:
 
     session.commit()
 
-    return {"ok": True}
-
-
-@m.microservice_endpoint(path=["Heartbeat"])
-def handle_ms(data: dict, microservice: str) -> dict:
     return {"ok": True}
