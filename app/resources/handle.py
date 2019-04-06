@@ -5,7 +5,7 @@ from models.wallet_db import Wallet
 from objects_init import session
 from schemes import *
 
-m: MicroService = MicroService('wallet')
+m: MicroService = MicroService('currency')
 
 
 @m.user_endpoint(path=["create"])
