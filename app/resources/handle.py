@@ -10,9 +10,6 @@ m: MicroService = MicroService('wallet')
 
 @m.user_endpoint(path=["create"])
 def create(data: dict, user: str) -> dict:
-    if 'user_uuid' not in data:
-        return {"wallet_response": {"error": "Key 'user_uuid' has to be set for endpoint create."}}
-
     wallet_response: dict = Wallet.create(user)
 
     return wallet_response
