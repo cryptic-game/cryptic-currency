@@ -4,7 +4,7 @@ from typing import Tuple, Union, List
 to_load: List[Union[Tuple[str,str],Tuple[str,int]]] = [
     ("MYSQL_HOSTNAME", "localhost"),
     ("MYSQL_PORT", 3306),
-    ("MYSQL_DATABASE", "crytpic"),
+    ("MYSQL_DATABASE", "cryptic"),
     ("MYSQL_USERNAME", "cryptic"),
     ("MYSQL_PASSWORD", "cryptic"),
 
@@ -25,3 +25,4 @@ for key in to_load:
 config["SQLALCHEMY_DATABASE_URI"]: str = \
     f"mysql+pymysql://{config['MYSQL_USERNAME']}:{config['MYSQL_PASSWORD']}@" \
         f"{config['MYSQL_HOSTNAME']}:{config['MYSQL_PORT']}/{config['MYSQL_DATABASE']}"
+
