@@ -1,7 +1,14 @@
-from objects_init import engine, Base
-from resources.handle import m
+from cryptic import MicroService, Config, DatabaseWrapper, get_config
+
+config: Config = get_config("debug")  # / production
+
+m: MicroService = MicroService('currency')
+
+wrapper: DatabaseWrapper = m.get_wrapper()
 
 if __name__ == '__main__':
-    Base.metadata.create_all(bind=engine)
+    from resources.handle import *
+
+    wrapper.Base.metadata.create_all(bind=wrapper.engine)
 
     m.run()

@@ -1,11 +1,7 @@
-from cryptic import MicroService
-
+from app import m, wrapper
 from models.transaction_db import Transaction
 from models.wallet_db import Wallet
-from objects_init import session
 from schemes import *
-
-m: MicroService = MicroService('currency')
 
 
 @m.user_endpoint(path=["create"])
@@ -25,7 +21,7 @@ def get(data: dict, user: str) -> dict:
     if not Wallet.auth_user(data["source_uuid"], data["key"]):
         return invalid_key
 
-    amount: int = session.query(Wallet).get(data["source_uuid"]).amount
+    amount: int = wrapper.session.query(Wallet).get(data["source_uuid"]).amount
 
     return {"success": {"amount": amount, "transactions": Transaction.get(data["source_uuid"])}}
 
@@ -48,8 +44,8 @@ def send(data: dict, user: str) -> dict:
     if Wallet.auth_user(data["source_uuid"], data["key"]) is False:
         return invalid_key
 
-    source_wallet: Wallet = session.query(Wallet).filter_by(uuid=data["source_uuid"]).first()
-    destination_wallet: Wallet = session.query(Wallet).filter_by(uuid=data["destination_uuid"]).first()
+    source_wallet: Wallet = wrapper.session.query(Wallet).filter_by(uuid=data["source_uuid"]).first()
+    destination_wallet: Wallet = wrapper.session.query(Wallet).filter_by(uuid=data["destination_uuid"]).first()
 
     if source_wallet is None or destination_wallet is None:
         return source_or_destination_invalid
@@ -59,7 +55,7 @@ def send(data: dict, user: str) -> dict:
 
     source_wallet.amount -= data["amount"]
     destination_wallet.amount += data["amount"]
-    session.commit()
+    wrapper.session.commit()
 
     Transaction.create(data["source_uuid"], data["amount"], data["destination_uuid"], usage)
 
@@ -71,12 +67,11 @@ def delete(data: dict, user: str) -> dict:
     if 'source_uuid' not in data:
         return source_uuid_missing
     source_uuid: str = data['source_uuid']
-    wallet: Wallet = session.query(Wallet).filter_by(uuid=source_uuid).first()
+    wallet: Wallet = wrapper.session.query(Wallet).filter_by(uuid=source_uuid).first()
     if wallet is None:
         return source_or_destination_invalid
 
-    session.delete(wallet)
-
-    session.commit()
+    wrapper.session.delete(wallet)
+    wrapper.session.commit()
 
     return {"ok": True}
