@@ -3,7 +3,7 @@ from typing import Union
 
 from sqlalchemy import Column, Integer, String, DateTime, or_
 
-import objects_init as db
+import objects as db
 
 
 class Transaction(db.Base):

@@ -1,11 +1,9 @@
-from cryptic import MicroService
-
-from models.transaction_db import Transaction
-from models.wallet_db import Wallet
-from objects_init import session
+from models.transaction import Transaction
+from models.wallet import Wallet
+from objects import session
 from schemes import *
 
-m: MicroService = MicroService('currency')
+from app import m
 
 
 @m.user_endpoint(path=["create"])

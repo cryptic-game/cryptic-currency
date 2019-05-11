@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from sqlalchemy import Column, Integer, String, DateTime, exists, and_
 
-import objects_init as db
+import objects as db
 
 
 class Wallet(db.Base):
