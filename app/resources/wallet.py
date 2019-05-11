@@ -1,6 +1,6 @@
 from app import m, wrapper
-from models.transaction_db import Transaction
-from models.wallet_db import Wallet
+from models.transaction import Transaction
+from models.wallet import Wallet
 from schemes import *
 
 
