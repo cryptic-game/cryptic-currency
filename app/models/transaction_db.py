@@ -3,10 +3,10 @@ from typing import Union
 
 from sqlalchemy import Column, Integer, String, DateTime, or_
 
-import objects_init as db
+from app import wrapper
 
 
-class Transaction(db.Base):
+class Transaction(wrapper.Base):
     __tablename__: str = "transaction"
 
     id: Union[Column, int] = Column(Integer, primary_key=True, autoincrement=True, unique=True)
@@ -38,14 +38,14 @@ class Transaction(db.Base):
         )
 
         # Add the new transaction to the db
-        db.session.add(transaction)
-        db.session.commit()
+        wrapper.session.add(transaction)
+        wrapper.session.commit()
 
     @staticmethod
     def get(source_uuid):
         transactions: list = []
-        for i in db.session.query(Transaction).filter(or_(Transaction.source_uuid == source_uuid,
-                                                          Transaction.destination_uuid == source_uuid)):
+        for i in wrapper.session.query(Transaction).filter(or_(Transaction.source_uuid == source_uuid,
+                                                               Transaction.destination_uuid == source_uuid)):
             transactions.append({"time_stamp": str(i.time_stamp), "source_uuid": str(i.source_uuid),
                                  "amount": int(i.send_amount), "destination_uuid": str(i.destination_uuid),
                                  "usage": str(i.usage)})
