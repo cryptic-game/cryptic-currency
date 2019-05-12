@@ -8,7 +8,7 @@ from sqlalchemy import func
 @m.user_endpoint(path=["create"])
 def create(data: dict, user: str) -> dict:
     wallet_count: int = \
-        (wrapper.session.query(func.count(Wallet.user_uuid)).filter(Wallet.owner == user)).first()[0]
+        (wrapper.session.query(func.count(Wallet.user_uuid)).filter(Wallet.user_uuid == user)).first()[0]
 
     if wallet_count < 1:
         wallet_response: dict = Wallet.create(user)
