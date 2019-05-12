@@ -16,7 +16,7 @@ def create(data: dict, user: str) -> dict:
         return wallet_response
     else:
         return {
-            "error": "You already own an wallet!"
+            "error": "You already own a wallet!"
         }
 
 
