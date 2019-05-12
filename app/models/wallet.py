@@ -4,10 +4,10 @@ from uuid import uuid4
 
 from sqlalchemy import Column, Integer, String, DateTime, exists, and_
 
-import objects as db
+from app import wrapper
 
 
-class Wallet(db.Base):
+class Wallet(wrapper.Base):
     __tablename__: str = "wallet"
 
     time_stamp: Union[Column, datetime.datetime] = Column(DateTime, nullable=False)
@@ -45,10 +45,11 @@ class Wallet(db.Base):
         )
 
         # Add the new wallet to the db
-        db.session.add(wallet)
-        db.session.commit()
+        wrapper.session.add(wallet)
+        wrapper.session.commit()
         return {"success": "Your wallet has been created. ", "uuid": str(source_uuid), "key": str(key)}
 
     @staticmethod
     def auth_user(source_uuid: str, key: str) -> bool:
-        return db.session.query(exists().where(and_(Wallet.source_uuid == source_uuid, Wallet.key == key))).scalar()
+        return wrapper.session.query(
+            exists().where(and_(Wallet.source_uuid == source_uuid, Wallet.key == key))).scalar()
