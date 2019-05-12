@@ -2,13 +2,22 @@ from app import m, wrapper
 from models.transaction import Transaction
 from models.wallet import Wallet
 from schemes import *
+from sqlalchemy import func
 
 
 @m.user_endpoint(path=["create"])
 def create(data: dict, user: str) -> dict:
-    wallet_response: dict = Wallet.create(user)
+    wallet_count: int = \
+        (wrapper.session.query(func.count(Wallet.user_uuid)).filter(Wallet.owner == user)).first()[0]
 
-    return wallet_response
+    if wallet_count < 1:
+        wallet_response: dict = Wallet.create(user)
+
+        return wallet_response
+    else:
+        return {
+            "error": "You already own an wallet!"
+        }
 
 
 @m.user_endpoint(path=["get"])
