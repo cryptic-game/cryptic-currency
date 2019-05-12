@@ -52,4 +52,4 @@ class Wallet(wrapper.Base):
     @staticmethod
     def auth_user(source_uuid: str, key: str) -> bool:
         return wrapper.session.query(
-            exists().where(and_(Wallet.source_uuid == source_uuid, Wallet.key == key))).scalar()
+            wrapper.session.query(Wallet).filter(Wallet.source_uuid == source_uuid, Wallet.key == key).exists()).scalar()
