@@ -53,20 +53,20 @@ def send(data: dict, user: str) -> dict:
     if Wallet.auth_user(data["source_uuid"], data["key"]) is False:
         return invalid_key
 
-    source_wallet: Wallet = wrapper.session.query(Wallet).filter_by(uuid=data["source_uuid"]).first()
-    destination_wallet: Wallet = wrapper.session.query(Wallet).filter_by(uuid=data["destination_uuid"]).first()
+    source_wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=data["source_uuid"]).first()
+    destination_wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=data["destination_uuid"]).first()
 
     if source_wallet is None or destination_wallet is None:
         return source_or_destination_invalid
 
-    if source_wallet.amount - data["amount"] < 0 or data["amount"] < 0:
+    if source_wallet.amount - data["send_amount"] < 0 or data["send_amount"] < 0:
         return you_make_debt
 
-    source_wallet.amount -= data["amount"]
-    destination_wallet.amount += data["amount"]
+    source_wallet.amount -= data["send_amount"]
+    destination_wallet.amount += data["send_amount"]
     wrapper.session.commit()
 
-    Transaction.create(data["source_uuid"], data["amount"], data["destination_uuid"], usage)
+    Transaction.create(data["source_uuid"], data["send_amount"], data["destination_uuid"], usage)
 
     return {"ok": True}
 
