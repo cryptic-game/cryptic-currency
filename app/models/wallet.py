@@ -23,7 +23,7 @@ class Wallet(wrapper.Base):
 
         del d['_sa_instance_state']
 
-        return self.__dict__
+        return d
 
     @staticmethod
     def create(user_uuid: str) -> dict:

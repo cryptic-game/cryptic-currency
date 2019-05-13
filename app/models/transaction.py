@@ -23,7 +23,7 @@ class Transaction(wrapper.Base):
 
         del d['_sa_instance_state']
 
-        return self.__dict__
+        return d
 
     @staticmethod
     def create(source_uuid: str, send_amount: int, destination_uuid: str, usage: str):
