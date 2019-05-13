@@ -18,7 +18,11 @@ class Wallet(wrapper.Base):
 
     @property
     def serialize(self) -> dict:
-        _ = self.source_uuid
+        _: str = self.source_uuid
+        d = self.__dict__
+
+        del d['_sa_instance_state']
+
         return self.__dict__
 
     @staticmethod

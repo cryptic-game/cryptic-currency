@@ -18,7 +18,11 @@ class Transaction(wrapper.Base):
 
     @property
     def serialize(self) -> dict:
-        _ = self.id
+        _: int = self.id
+        d = self.__dict__
+
+        del d['_sa_instance_state']
+
         return self.__dict__
 
     @staticmethod
