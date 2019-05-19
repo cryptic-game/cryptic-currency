@@ -75,8 +75,12 @@ def send(data: dict, user: str) -> dict:
 def delete(data: dict, user: str) -> dict:
     if 'source_uuid' not in data:
         return source_uuid_missing
+    if 'key' not in data:
+        return key_missing
+
     source_uuid: str = data['source_uuid']
-    wallet: Wallet = wrapper.session.query(Wallet).filter_by(uuid=source_uuid).first()
+    key: str = data['key']
+    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid, key=key).first()
     if wallet is None:
         return source_or_destination_invalid
 
