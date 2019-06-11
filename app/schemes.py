@@ -1,14 +1,20 @@
-key_missing: dict = {"error": "Key 'key' has to be set for this endpoint"}
+from scheme import *
 
-source_uuid_missing: dict = {"error": "Key 'source_uuid' has to be set for this endpoint"}
+scheme_default : dict = {
+    "source_uuid": UUID(min_length=36, max_length=36),
+    "key": Text(min_length=16, max_length=16),
+}
 
-invalid_key: dict = {"error": "Invalid key"}
+scheme_send: dict = {
+    "source_uuid": UUID(min_length=36, max_length=36),
+    "key": Text(min_length=16, max_length=16),
+    "send_amount": Integer(minimum=1),
+    "destination_uuid": UUID(min_length=36, max_length=36),
+    "usage": Text(optional=True)
+}
 
-send_amount_missing: dict = {"error": "Key 'send_amount' has to be set for this endpoint"}
+permission_denied : dict = {"error": "permission_denied"}
 
-destination_missing: dict = {"error": "Key 'destination_uuid' has to be set for this endpoint"}
+source_or_destination_invalid: dict = {"error": "unknown_source_or_destination"}
 
-source_or_destination_invalid: dict = {
-    "error": "Your source or destination uuid is not valid"}
-
-you_make_debt: dict = {"error": "You don't have enough morphcoins"}
+you_make_debt: dict = {"error": "not_enough_coins"}
