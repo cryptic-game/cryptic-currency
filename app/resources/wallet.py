@@ -4,7 +4,7 @@ from models.wallet import Wallet
 from schemes import *
 from sqlalchemy import func
 
-@m.user_endpoint(path=["create"], required = {})
+@m.user_endpoint(path=["create"], requires = {})
 def create(data: dict, user: str) -> dict:
     wallet_count: int = \
         (wrapper.session.query(func.count(Wallet.user_uuid)).filter(Wallet.user_uuid == user)).first()[0]
@@ -19,7 +19,7 @@ def create(data: dict, user: str) -> dict:
         }
 
 
-@m.user_endpoint(path=["get"])
+@m.user_endpoint(path=["get"], requires=scheme_default)
 def get(data: dict, user: str) -> dict:
 
     if not Wallet.auth_user(data["source_uuid"], data["key"]):
