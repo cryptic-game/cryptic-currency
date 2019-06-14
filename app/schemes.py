@@ -1,19 +1,19 @@
 from scheme import *
 
-scheme_default : dict = {
-    "source_uuid": UUID(min_length=36, max_length=36),
-    "key": Text(min_length=16, max_length=16),
+scheme_default: dict = {
+    "source_uuid": UUID(),
+    "key": Text(pattern=r'^[a-f0-9]{10}$'),
 }
 
 scheme_send: dict = {
-    "source_uuid": UUID(min_length=36, max_length=36),
-    "key": Text(min_length=16, max_length=16),
+    "source_uuid": UUID(),
+    "key": Text(pattern=r'^[a-f0-9]{10}$'),
     "send_amount": Integer(minimum=1),
-    "destination_uuid": UUID(min_length=36, max_length=36),
-    "usage": Text(optional=True)
+    "destination_uuid": UUID(),
+    "usage": Text()
 }
 
-permission_denied : dict = {"error": "permission_denied"}
+permission_denied: dict = {"error": "permission_denied"}
 
 source_or_destination_invalid: dict = {"error": "unknown_source_or_destination"}
 

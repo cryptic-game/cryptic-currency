@@ -1,10 +1,12 @@
+from sqlalchemy import func
+
 from app import m, wrapper
 from models.transaction import Transaction
 from models.wallet import Wallet
 from schemes import *
-from sqlalchemy import func
 
-@m.user_endpoint(path=["create"], requires = {})
+
+@m.user_endpoint(path=["create"], requires={})
 def create(data: dict, user: str) -> dict:
     wallet_count: int = \
         (wrapper.session.query(func.count(Wallet.user_uuid)).filter(Wallet.user_uuid == user)).first()[0]
@@ -21,7 +23,6 @@ def create(data: dict, user: str) -> dict:
 
 @m.user_endpoint(path=["get"], requires=scheme_default)
 def get(data: dict, user: str) -> dict:
-
     if not Wallet.auth_user(data["source_uuid"], data["key"]):
         return permission_denied
 
@@ -30,13 +31,9 @@ def get(data: dict, user: str) -> dict:
     return {"success": {"amount": amount, "transactions": Transaction.get(data["source_uuid"])}}
 
 
-@m.user_endpoint(path=["send"], requires = scheme_send)
+@m.user_endpoint(path=["send"], requires=scheme_send)
 def send(data: dict, user: str) -> dict:
-
-    if 'usage' not in data:
-        usage: str = ''
-    else:
-        usage: str = data['usage']
+    usage: str = data['usage']
 
     if Wallet.auth_user(data["source_uuid"], data["key"]) is False:
         return permission_denied
@@ -59,9 +56,8 @@ def send(data: dict, user: str) -> dict:
     return {"ok": True}
 
 
-@m.user_endpoint(path=["delete"], requires = scheme_default)
+@m.user_endpoint(path=["delete"], requires=scheme_default)
 def delete(data: dict, user: str) -> dict:
-
     source_uuid: str = data['source_uuid']
     key: str = data['key']
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid, key=key).first()
@@ -73,9 +69,9 @@ def delete(data: dict, user: str) -> dict:
 
     return {"ok": True}
 
-@m.microservice_endpoint(path = ["dump"])
-def dump(data : dict, microservice : str) -> dict:
 
+@m.microservice_endpoint(path=["dump"])
+def dump(data: dict, microservice: str) -> dict:
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=data["source_uuid"], key=data["key"]).first()
     if wallet is None:
         return source_or_destination_invalid
