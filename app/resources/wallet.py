@@ -70,6 +70,11 @@ def delete(data: dict, user: str) -> dict:
     return {"ok": True}
 
 
+@m.microservice_endpoint(path=["exists"])
+def exists(data: dict, microservice: str) -> dict:
+    return {"exists": wrapper.session.query(Wallet).filter_by(source_uuid=data["source_uuid"]).first() is not None}
+
+
 @m.microservice_endpoint(path=["put"])
 def put(data: dict, microservice: str) -> dict:
     source_uuid: str = data["source_uuid"]
@@ -111,4 +116,3 @@ def dump(data: dict, microservice: str) -> dict:
     transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage)
 
     return transaction.serialize
-
