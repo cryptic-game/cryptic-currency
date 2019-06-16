@@ -6,6 +6,15 @@ from models.wallet import Wallet
 from schemes import *
 
 
+def update_miner(wallet: Wallet):
+    for coins in m.contact_microservice("service", ["miner", "collect"], {"wallet_uuid": wallet.source_uuid})["coins"]:
+        amount: int = coins["amount"]
+        miner_uuid: str = coins["miner_uuid"]
+        if amount > 0:
+            wallet.amount += amount
+            Transaction.create(miner_uuid, amount, wallet.source_uuid, "Crypto Mining", origin=1)
+
+
 @m.user_endpoint(path=["create"], requires={})
 def create(data: dict, user: str) -> dict:
     wallet_count: int = \
@@ -23,12 +32,16 @@ def create(data: dict, user: str) -> dict:
 
 @m.user_endpoint(path=["get"], requires=scheme_default)
 def get(data: dict, user: str) -> dict:
-    if not Wallet.auth_user(data["source_uuid"], data["key"]):
+    source_uuid: str = data["source_uuid"]
+    wallet: Wallet = wrapper.session.query(Wallet).get(source_uuid)
+    if wallet is None:
+        return source_or_destination_invalid
+    if wallet.key != data["key"]:
         return permission_denied
 
-    amount: int = wrapper.session.query(Wallet).get(data["source_uuid"]).amount
+    update_miner(wallet)
 
-    return {"success": {"amount": amount, "transactions": Transaction.get(data["source_uuid"])}}
+    return {"success": {"amount": wallet.amount, "transactions": Transaction.get(source_uuid)}}
 
 
 @m.user_endpoint(path=["send"], requires=scheme_send)
@@ -44,6 +57,8 @@ def send(data: dict, user: str) -> dict:
     if source_wallet is None or destination_wallet is None:
         return source_or_destination_invalid
 
+    update_miner(source_wallet)
+
     if source_wallet.amount - data["send_amount"] < 0 or data["send_amount"] < 0:
         return you_make_debt
 
@@ -51,7 +66,7 @@ def send(data: dict, user: str) -> dict:
     destination_wallet.amount += data["send_amount"]
     wrapper.session.commit()
 
-    Transaction.create(data["source_uuid"], data["send_amount"], data["destination_uuid"], usage)
+    Transaction.create(data["source_uuid"], data["send_amount"], data["destination_uuid"], usage, origin=0)
 
     return {"ok": True}
 
@@ -81,6 +96,7 @@ def put(data: dict, microservice: str) -> dict:
     amount: int = data["amount"]
     destination_uuid: str = data["destination_uuid"]
     usage: str = data["usage"]
+    origin: int = data["origin"]
 
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=destination_uuid).first()
     if wallet is None:
@@ -89,7 +105,7 @@ def put(data: dict, microservice: str) -> dict:
     wallet.amount += amount
     wrapper.session.commit()
 
-    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage)
+    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
 
     return transaction.serialize
 
@@ -101,6 +117,7 @@ def dump(data: dict, microservice: str) -> dict:
     amount: int = data["amount"]
     destination_uuid: str = data["destination_uuid"]
     usage: str = data["usage"]
+    origin: int = data["origin"]
 
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid).first()
     if wallet is None:
@@ -113,6 +130,6 @@ def dump(data: dict, microservice: str) -> dict:
     wallet.amount -= amount
     wrapper.session.commit()
 
-    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage)
+    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
 
     return transaction.serialize
