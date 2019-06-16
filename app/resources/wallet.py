@@ -1,11 +1,12 @@
+from sqlalchemy import func
+
 from app import m, wrapper
 from models.transaction import Transaction
 from models.wallet import Wallet
 from schemes import *
-from sqlalchemy import func
 
 
-@m.user_endpoint(path=["create"])
+@m.user_endpoint(path=["create"], requires={})
 def create(data: dict, user: str) -> dict:
     wallet_count: int = \
         (wrapper.session.query(func.count(Wallet.user_uuid)).filter(Wallet.user_uuid == user)).first()[0]
@@ -20,38 +21,22 @@ def create(data: dict, user: str) -> dict:
         }
 
 
-@m.user_endpoint(path=["get"])
+@m.user_endpoint(path=["get"], requires=scheme_default)
 def get(data: dict, user: str) -> dict:
-    if 'source_uuid' not in data:
-        return source_uuid_missing
-    if 'key' not in data:
-        return key_missing
-
     if not Wallet.auth_user(data["source_uuid"], data["key"]):
-        return invalid_key
+        return permission_denied
 
     amount: int = wrapper.session.query(Wallet).get(data["source_uuid"]).amount
 
     return {"success": {"amount": amount, "transactions": Transaction.get(data["source_uuid"])}}
 
 
-@m.user_endpoint(path=["send"])
+@m.user_endpoint(path=["send"], requires=scheme_send)
 def send(data: dict, user: str) -> dict:
-    if 'source_uuid' not in data:
-        return source_uuid_missing
-    if 'key' not in data:
-        return key_missing
-    if 'send_amount' not in data:
-        return send_amount_missing
-    if 'destination_uuid' not in data:
-        return destination_missing
-    if 'usage' not in data:
-        usage: str = ''
-    else:
-        usage: str = data['usage']
+    usage: str = data['usage']
 
     if Wallet.auth_user(data["source_uuid"], data["key"]) is False:
-        return invalid_key
+        return permission_denied
 
     source_wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=data["source_uuid"]).first()
     destination_wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=data["destination_uuid"]).first()
@@ -71,13 +56,8 @@ def send(data: dict, user: str) -> dict:
     return {"ok": True}
 
 
-@m.user_endpoint(path=["delete"])
+@m.user_endpoint(path=["delete"], requires=scheme_default)
 def delete(data: dict, user: str) -> dict:
-    if 'source_uuid' not in data:
-        return source_uuid_missing
-    if 'key' not in data:
-        return key_missing
-
     source_uuid: str = data['source_uuid']
     key: str = data['key']
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid, key=key).first()
@@ -88,3 +68,51 @@ def delete(data: dict, user: str) -> dict:
     wrapper.session.commit()
 
     return {"ok": True}
+
+
+@m.microservice_endpoint(path=["exists"])
+def exists(data: dict, microservice: str) -> dict:
+    return {"exists": wrapper.session.query(Wallet).filter_by(source_uuid=data["source_uuid"]).first() is not None}
+
+
+@m.microservice_endpoint(path=["put"])
+def put(data: dict, microservice: str) -> dict:
+    source_uuid: str = data["source_uuid"]
+    amount: int = data["amount"]
+    destination_uuid: str = data["destination_uuid"]
+    usage: str = data["usage"]
+
+    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=destination_uuid).first()
+    if wallet is None:
+        return source_or_destination_invalid
+
+    wallet.amount += amount
+    wrapper.session.commit()
+
+    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage)
+
+    return transaction.serialize
+
+
+@m.microservice_endpoint(path=["dump"])
+def dump(data: dict, microservice: str) -> dict:
+    source_uuid: str = data["source_uuid"]
+    key: str = data["key"]
+    amount: int = data["amount"]
+    destination_uuid: str = data["destination_uuid"]
+    usage: str = data["usage"]
+
+    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid).first()
+    if wallet is None:
+        return source_or_destination_invalid
+    if wallet.key != key:
+        return permission_denied
+
+    if wallet.amount < amount:
+        return you_make_debt
+    wallet.amount -= amount
+    wrapper.session.commit()
+
+    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage)
+
+    return transaction.serialize
