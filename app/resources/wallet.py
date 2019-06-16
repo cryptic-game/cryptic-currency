@@ -70,16 +70,45 @@ def delete(data: dict, user: str) -> dict:
     return {"ok": True}
 
 
-@m.microservice_endpoint(path=["dump"])
-def dump(data: dict, microservice: str) -> dict:
-    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=data["source_uuid"], key=data["key"]).first()
+@m.microservice_endpoint(path=["put"])
+def put(data: dict, microservice: str) -> dict:
+    source_uuid: str = data["source_uuid"]
+    amount: int = data["amount"]
+    destination_uuid: str = data["destination_uuid"]
+    usage: str = data["usage"]
+
+    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=destination_uuid).first()
     if wallet is None:
         return source_or_destination_invalid
 
-    if wallet.amount < int(data["send_amount"]):
-        return you_make_debt
-
-    wallet.amount -= int(data["send_amount"])
+    wallet.amount += amount
     wrapper.session.commit()
 
-    # Maybe create a transaktion here
+    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage)
+
+    return transaction.serialize
+
+
+@m.microservice_endpoint(path=["dump"])
+def dump(data: dict, microservice: str) -> dict:
+    source_uuid: str = data["source_uuid"]
+    key: str = data["key"]
+    amount: int = data["amount"]
+    destination_uuid: str = data["destination_uuid"]
+    usage: str = data["usage"]
+
+    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid).first()
+    if wallet is None:
+        return source_or_destination_invalid
+    if wallet.key != key:
+        return permission_denied
+
+    if wallet.amount < amount:
+        return you_make_debt
+    wallet.amount -= amount
+    wrapper.session.commit()
+
+    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage)
+
+    return transaction.serialize
+
