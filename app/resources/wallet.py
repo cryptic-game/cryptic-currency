@@ -1,5 +1,3 @@
-from typing import Dict
-
 from sqlalchemy import func
 
 from app import m, wrapper
@@ -9,11 +7,9 @@ from schemes import *
 
 
 def update_miner(wallet: Wallet):
-    coins: Dict[str, int] = m.contact_microservice("service", ["miner", "collect"],
-                                                   {"wallet_uuid": wallet.source_uuid})
-    for miner_uuid, amount in coins.items():
-        wallet.amount += amount
-        Transaction.create(miner_uuid, amount, wallet.source_uuid, "Crypto Mining", origin=1)
+    wallet.amount += m.contact_microservice("service", ["miner", "collect"],
+                                            {"wallet_uuid": wallet.source_uuid})["coins"]
+    wrapper.session.commit()
 
 
 @m.user_endpoint(path=["create"], requires={})
@@ -93,11 +89,8 @@ def exists(data: dict, microservice: str) -> dict:
 
 @m.microservice_endpoint(path=["put"])
 def put(data: dict, microservice: str) -> dict:
-    source_uuid: str = data["source_uuid"]
     amount: int = data["amount"]
     destination_uuid: str = data["destination_uuid"]
-    usage: str = data["usage"]
-    origin: int = data["origin"]
 
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=destination_uuid).first()
     if wallet is None:
@@ -106,9 +99,15 @@ def put(data: dict, microservice: str) -> dict:
     wallet.amount += amount
     wrapper.session.commit()
 
-    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
+    if data["create_transaction"]:
+        source_uuid: str = data["source_uuid"]
+        usage: str = data["usage"]
+        origin: int = data["origin"]
 
-    return transaction.serialize
+        transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
+        return transaction.serialize
+    else:
+        return {"ok": True}
 
 
 @m.microservice_endpoint(path=["dump"])
@@ -116,9 +115,6 @@ def dump(data: dict, microservice: str) -> dict:
     source_uuid: str = data["source_uuid"]
     key: str = data["key"]
     amount: int = data["amount"]
-    destination_uuid: str = data["destination_uuid"]
-    usage: str = data["usage"]
-    origin: int = data["origin"]
 
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid).first()
     if wallet is None:
@@ -133,6 +129,12 @@ def dump(data: dict, microservice: str) -> dict:
     wallet.amount -= amount
     wrapper.session.commit()
 
-    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
+    if data["create_transaction"]:
+        destination_uuid: str = data["destination_uuid"]
+        usage: str = data["usage"]
+        origin: int = data["origin"]
 
-    return transaction.serialize
+        transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
+        return transaction.serialize
+    else:
+        return {"ok": True}
