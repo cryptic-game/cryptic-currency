@@ -1,3 +1,5 @@
+from typing import Dict
+
 from sqlalchemy import func
 
 from app import m, wrapper
@@ -7,12 +9,11 @@ from schemes import *
 
 
 def update_miner(wallet: Wallet):
-    for coins in m.contact_microservice("service", ["miner", "collect"], {"wallet_uuid": wallet.source_uuid})["coins"]:
-        amount: int = coins["amount"]
-        miner_uuid: str = coins["miner_uuid"]
-        if amount > 0:
-            wallet.amount += amount
-            Transaction.create(miner_uuid, amount, wallet.source_uuid, "Crypto Mining", origin=1)
+    coins: Dict[str, int] = m.contact_microservice("service", ["miner", "collect"],
+                                                   {"wallet_uuid": wallet.source_uuid})
+    for miner_uuid, amount in coins.items():
+        wallet.amount += amount
+        Transaction.create(miner_uuid, amount, wallet.source_uuid, "Crypto Mining", origin=1)
 
 
 @m.user_endpoint(path=["create"], requires={})
