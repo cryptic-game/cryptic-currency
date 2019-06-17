@@ -126,6 +126,8 @@ def dump(data: dict, microservice: str) -> dict:
     if wallet.key != key:
         return permission_denied
 
+    update_miner(wallet)
+
     if wallet.amount < amount:
         return you_make_debt
     wallet.amount -= amount
