@@ -15,6 +15,7 @@ class Transaction(wrapper.Base):
     send_amount: Union[Column, int] = Column(Integer, nullable=False, default=0)
     destination_uuid: Union[Column, str] = Column(String(36))
     usage: Union[Column, str] = Column(String(255), default='')
+    origin: Union[Column, Integer] = Column(Integer)
 
     @property
     def serialize(self) -> dict:
@@ -27,7 +28,7 @@ class Transaction(wrapper.Base):
         return d
 
     @staticmethod
-    def create(source_uuid: str, send_amount: int, destination_uuid: str, usage: str) -> 'Transaction':
+    def create(source_uuid: str, send_amount: int, destination_uuid: str, usage: str, origin: int) -> 'Transaction':
         # create transaction and add it to database
         """
         Returns a transaction of a source_uuid.
@@ -39,7 +40,8 @@ class Transaction(wrapper.Base):
             source_uuid=source_uuid,
             send_amount=send_amount,
             destination_uuid=destination_uuid,
-            usage=usage
+            usage=usage,
+            origin=origin
         )
 
         # Add the new transaction to the db

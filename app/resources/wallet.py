@@ -6,6 +6,12 @@ from models.wallet import Wallet
 from schemes import *
 
 
+def update_miner(wallet: Wallet):
+    wallet.amount += m.contact_microservice("service", ["miner", "collect"],
+                                            {"wallet_uuid": wallet.source_uuid})["coins"]
+    wrapper.session.commit()
+
+
 @m.user_endpoint(path=["create"], requires={})
 def create(data: dict, user: str) -> dict:
     wallet_count: int = \
@@ -23,12 +29,16 @@ def create(data: dict, user: str) -> dict:
 
 @m.user_endpoint(path=["get"], requires=scheme_default)
 def get(data: dict, user: str) -> dict:
-    if not Wallet.auth_user(data["source_uuid"], data["key"]):
+    source_uuid: str = data["source_uuid"]
+    wallet: Wallet = wrapper.session.query(Wallet).get(source_uuid)
+    if wallet is None:
+        return source_or_destination_invalid
+    if wallet.key != data["key"]:
         return permission_denied
 
-    amount: int = wrapper.session.query(Wallet).get(data["source_uuid"]).amount
+    update_miner(wallet)
 
-    return {"success": {"amount": amount, "transactions": Transaction.get(data["source_uuid"])}}
+    return {"success": {"amount": wallet.amount, "transactions": Transaction.get(source_uuid)}}
 
 
 @m.user_endpoint(path=["send"], requires=scheme_send)
@@ -44,6 +54,8 @@ def send(data: dict, user: str) -> dict:
     if source_wallet is None or destination_wallet is None:
         return source_or_destination_invalid
 
+    update_miner(source_wallet)
+
     if source_wallet.amount - data["send_amount"] < 0 or data["send_amount"] < 0:
         return you_make_debt
 
@@ -51,7 +63,7 @@ def send(data: dict, user: str) -> dict:
     destination_wallet.amount += data["send_amount"]
     wrapper.session.commit()
 
-    Transaction.create(data["source_uuid"], data["send_amount"], data["destination_uuid"], usage)
+    Transaction.create(data["source_uuid"], data["send_amount"], data["destination_uuid"], usage, origin=0)
 
     return {"ok": True}
 
@@ -77,10 +89,8 @@ def exists(data: dict, microservice: str) -> dict:
 
 @m.microservice_endpoint(path=["put"])
 def put(data: dict, microservice: str) -> dict:
-    source_uuid: str = data["source_uuid"]
     amount: int = data["amount"]
     destination_uuid: str = data["destination_uuid"]
-    usage: str = data["usage"]
 
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=destination_uuid).first()
     if wallet is None:
@@ -89,9 +99,15 @@ def put(data: dict, microservice: str) -> dict:
     wallet.amount += amount
     wrapper.session.commit()
 
-    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage)
+    if data["create_transaction"]:
+        source_uuid: str = data["source_uuid"]
+        usage: str = data["usage"]
+        origin: int = data["origin"]
 
-    return transaction.serialize
+        transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
+        return transaction.serialize
+    else:
+        return {"ok": True}
 
 
 @m.microservice_endpoint(path=["dump"])
@@ -99,8 +115,6 @@ def dump(data: dict, microservice: str) -> dict:
     source_uuid: str = data["source_uuid"]
     key: str = data["key"]
     amount: int = data["amount"]
-    destination_uuid: str = data["destination_uuid"]
-    usage: str = data["usage"]
 
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid).first()
     if wallet is None:
@@ -108,11 +122,19 @@ def dump(data: dict, microservice: str) -> dict:
     if wallet.key != key:
         return permission_denied
 
+    update_miner(wallet)
+
     if wallet.amount < amount:
         return you_make_debt
     wallet.amount -= amount
     wrapper.session.commit()
 
-    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage)
+    if data["create_transaction"]:
+        destination_uuid: str = data["destination_uuid"]
+        usage: str = data["usage"]
+        origin: int = data["origin"]
 
-    return transaction.serialize
+        transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
+        return transaction.serialize
+    else:
+        return {"ok": True}
