@@ -2,7 +2,7 @@ import datetime
 from typing import Union
 from uuid import uuid4
 
-from sqlalchemy import Column, Integer, String, DateTime, exists, and_
+from sqlalchemy import Column, Integer, String, DateTime
 
 from app import wrapper
 
@@ -22,18 +22,16 @@ class Wallet(wrapper.Base):
         d = self.__dict__
 
         del d['_sa_instance_state']
+        d['time_stamp'] = str(d['time_stamp'])
 
         return d
 
     @staticmethod
-    def create(user_uuid: str) -> dict:
+    def create(user_uuid: str) -> 'Wallet':
         """
         Creates a new wallet.
         :return: dict with status
         """
-        # empty user uuid
-        if user_uuid == "":
-            return {"error": "You have to paste the user uuid to create a wallet."}
 
         source_uuid: str = str(uuid4())
         # uuid is 32 chars long -> now key is 10 chars long
@@ -51,9 +49,11 @@ class Wallet(wrapper.Base):
         # Add the new wallet to the db
         wrapper.session.add(wallet)
         wrapper.session.commit()
-        return {"success": "Your wallet has been created. ", "uuid": str(source_uuid), "key": str(key)}
+
+        return wallet
 
     @staticmethod
     def auth_user(source_uuid: str, key: str) -> bool:
         return wrapper.session.query(
-            wrapper.session.query(Wallet).filter(Wallet.source_uuid == source_uuid, Wallet.key == key).exists()).scalar()
+            wrapper.session.query(Wallet).filter(Wallet.source_uuid == source_uuid,
+                                                 Wallet.key == key).exists()).scalar()

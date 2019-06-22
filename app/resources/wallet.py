@@ -17,14 +17,12 @@ def create(data: dict, user: str) -> dict:
     wallet_count: int = \
         (wrapper.session.query(func.count(Wallet.user_uuid)).filter(Wallet.user_uuid == user)).first()[0]
 
-    if wallet_count < 1:
-        wallet_response: dict = Wallet.create(user)
+    if wallet_count > 0:
+        return already_own_a_wallet
 
-        return wallet_response
-    else:
-        return {
-            "error": "already_own_a_wallet"
-        }
+    wallet: Wallet = Wallet.create(user)
+
+    return wallet.serialize
 
 
 @m.user_endpoint(path=["get"], requires=scheme_default)
@@ -65,7 +63,7 @@ def send(data: dict, user: str) -> dict:
 
     Transaction.create(data["source_uuid"], data["send_amount"], data["destination_uuid"], usage, origin=0)
 
-    return {"ok": True}
+    return success_scheme
 
 
 @m.user_endpoint(path=["delete"], requires=scheme_default)
@@ -79,7 +77,7 @@ def delete(data: dict, user: str) -> dict:
     wrapper.session.delete(wallet)
     wrapper.session.commit()
 
-    return {"ok": True}
+    return success_scheme
 
 
 @m.microservice_endpoint(path=["exists"])
@@ -99,15 +97,15 @@ def put(data: dict, microservice: str) -> dict:
     wallet.amount += amount
     wrapper.session.commit()
 
-    if data["create_transaction"]:
-        source_uuid: str = data["source_uuid"]
-        usage: str = data["usage"]
-        origin: int = data["origin"]
+    if not data["create_transaction"]:
+        return success_scheme
 
-        transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
-        return transaction.serialize
-    else:
-        return {"ok": True}
+    source_uuid: str = data["source_uuid"]
+    usage: str = data["usage"]
+    origin: int = data["origin"]
+
+    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
+    return transaction.serialize
 
 
 @m.microservice_endpoint(path=["dump"])
@@ -129,12 +127,12 @@ def dump(data: dict, microservice: str) -> dict:
     wallet.amount -= amount
     wrapper.session.commit()
 
-    if data["create_transaction"]:
-        destination_uuid: str = data["destination_uuid"]
-        usage: str = data["usage"]
-        origin: int = data["origin"]
+    if not data["create_transaction"]:
+        return success_scheme
 
-        transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
-        return transaction.serialize
-    else:
-        return {"ok": True}
+    destination_uuid: str = data["destination_uuid"]
+    usage: str = data["usage"]
+    origin: int = data["origin"]
+
+    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
+    return transaction.serialize
