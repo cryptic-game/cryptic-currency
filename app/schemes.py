@@ -13,7 +13,11 @@ scheme_send: dict = {
     "usage": Text()
 }
 
+success_scheme: dict = {"ok": True}
+
 permission_denied: dict = {"error": "permission_denied"}
+
+already_own_a_wallet: dict = {"error": "already_own_a_wallet"}
 
 source_or_destination_invalid: dict = {"error": "unknown_source_or_destination"}
 
