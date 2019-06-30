@@ -5,6 +5,10 @@ scheme_default: dict = {
     "key": Text(pattern=r'^[a-f0-9]{10}$'),
 }
 
+scheme_reset: dict = {
+    "source_uuid": UUID()
+}
+
 scheme_send: dict = {
     "source_uuid": UUID(),
     "key": Text(pattern=r'^[a-f0-9]{10}$'),
@@ -19,6 +23,6 @@ permission_denied: dict = {"error": "permission_denied"}
 
 already_own_a_wallet: dict = {"error": "already_own_a_wallet"}
 
-source_or_destination_invalid: dict = {"error": "unknown_source_or_destination"}
+unknown_source_or_destination: dict = {"error": "unknown_source_or_destination"}
 
-you_make_debt: dict = {"error": "not_enough_coins"}
+not_enough_coins: dict = {"error": "not_enough_coins"}

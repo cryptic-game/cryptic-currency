@@ -30,13 +30,21 @@ def get(data: dict, user: str) -> dict:
     source_uuid: str = data["source_uuid"]
     wallet: Wallet = wrapper.session.query(Wallet).get(source_uuid)
     if wallet is None:
-        return source_or_destination_invalid
+        return unknown_source_or_destination
     if wallet.key != data["key"]:
         return permission_denied
 
     update_miner(wallet)
 
     return {"success": {"amount": wallet.amount, "transactions": Transaction.get(source_uuid)}}
+
+
+@m.user_endpoint(path=["list"], requires={})
+def list_wallets(data: dict, user: str) -> dict:
+    return {"wallets": [
+        wallet.source_uuid
+        for wallet in wrapper.session.query(Wallet).filter_by(user_uuid=user)
+    ]}
 
 
 @m.user_endpoint(path=["send"], requires=scheme_send)
@@ -50,12 +58,12 @@ def send(data: dict, user: str) -> dict:
     destination_wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=data["destination_uuid"]).first()
 
     if source_wallet is None or destination_wallet is None:
-        return source_or_destination_invalid
+        return unknown_source_or_destination
 
     update_miner(source_wallet)
 
     if source_wallet.amount - data["send_amount"] < 0 or data["send_amount"] < 0:
-        return you_make_debt
+        return not_enough_coins
 
     source_wallet.amount -= data["send_amount"]
     destination_wallet.amount += data["send_amount"]
@@ -66,13 +74,30 @@ def send(data: dict, user: str) -> dict:
     return success_scheme
 
 
+@m.user_endpoint(path=["reset"], requires=scheme_reset)
+def reset(data: dict, user: str) -> dict:
+    source_uuid: str = data["source_uuid"]
+
+    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid).first()
+    if wallet is None:
+        return unknown_source_or_destination
+
+    if wallet.user_uuid != user:
+        return permission_denied
+
+    wrapper.session.delete(wallet)
+    wrapper.session.commit()
+
+    return success_scheme
+
+
 @m.user_endpoint(path=["delete"], requires=scheme_default)
 def delete(data: dict, user: str) -> dict:
     source_uuid: str = data['source_uuid']
     key: str = data['key']
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid, key=key).first()
     if wallet is None:
-        return source_or_destination_invalid
+        return unknown_source_or_destination
 
     wrapper.session.delete(wallet)
     wrapper.session.commit()
@@ -92,7 +117,7 @@ def put(data: dict, microservice: str) -> dict:
 
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=destination_uuid).first()
     if wallet is None:
-        return source_or_destination_invalid
+        return unknown_source_or_destination
 
     wallet.amount += amount
     wrapper.session.commit()
@@ -116,14 +141,14 @@ def dump(data: dict, microservice: str) -> dict:
 
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid).first()
     if wallet is None:
-        return source_or_destination_invalid
+        return unknown_source_or_destination
     if wallet.key != key:
         return permission_denied
 
     update_miner(wallet)
 
     if wallet.amount < amount:
-        return you_make_debt
+        return not_enough_coins
     wallet.amount -= amount
     wrapper.session.commit()
 
