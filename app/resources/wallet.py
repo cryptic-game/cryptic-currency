@@ -36,7 +36,7 @@ def get(data: dict, user: str) -> dict:
 
     update_miner(wallet)
 
-    return {"success": {"amount": wallet.amount, "transactions": Transaction.get(source_uuid)}}
+    return {**wallet.serialize, "transactions": Transaction.get(source_uuid)}
 
 
 @m.user_endpoint(path=["list"], requires={})
