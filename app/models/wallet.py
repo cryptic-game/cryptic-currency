@@ -19,15 +19,15 @@ class Wallet(wrapper.Base):
     @property
     def serialize(self) -> dict:
         _: str = self.source_uuid
-        d = self.__dict__
+        d = self.__dict__.copy()
 
-        del d['_sa_instance_state']
-        d['time_stamp'] = str(d['time_stamp'])
+        del d["_sa_instance_state"]
+        d["time_stamp"] = str(d["time_stamp"])
 
         return d
 
     @staticmethod
-    def create(user_uuid: str) -> 'Wallet':
+    def create(user_uuid: str) -> "Wallet":
         """
         Creates a new wallet.
         :return: dict with status
@@ -39,11 +39,7 @@ class Wallet(wrapper.Base):
 
         # Create a new Wallet instance
         wallet: Wallet = Wallet(
-            time_stamp=datetime.datetime.now(),
-            source_uuid=source_uuid,
-            key=key,
-            amount=100,
-            user_uuid=user_uuid
+            time_stamp=datetime.datetime.now(), source_uuid=source_uuid, key=key, amount=100, user_uuid=user_uuid
         )
 
         # Add the new wallet to the db
@@ -55,5 +51,5 @@ class Wallet(wrapper.Base):
     @staticmethod
     def auth_user(source_uuid: str, key: str) -> bool:
         return wrapper.session.query(
-            wrapper.session.query(Wallet).filter(Wallet.source_uuid == source_uuid,
-                                                 Wallet.key == key).exists()).scalar()
+            wrapper.session.query(Wallet).filter(Wallet.source_uuid == source_uuid, Wallet.key == key).exists()
+        ).scalar()

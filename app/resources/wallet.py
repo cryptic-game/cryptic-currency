@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from typing import Optional
 
 from app import m, wrapper
 from models.transaction import Transaction
@@ -7,17 +7,16 @@ from schemes import *
 
 
 def update_miner(wallet: Wallet):
-    wallet.amount += m.contact_microservice("service", ["miner", "collect"],
-                                            {"wallet_uuid": wallet.source_uuid})["coins"]
+    wallet.amount += m.contact_microservice("service", ["miner", "collect"], {"wallet_uuid": wallet.source_uuid})[
+        "coins"
+    ]
     wrapper.session.commit()
 
 
 @m.user_endpoint(path=["create"], requires={})
 def create(data: dict, user: str) -> dict:
-    wallet_count: int = \
-        (wrapper.session.query(func.count(Wallet.user_uuid)).filter(Wallet.user_uuid == user)).first()[0]
-
-    if wallet_count > 0:
+    wallet: Optional[Wallet] = wrapper.session.query(Wallet).filter_by(user_uuid=user).first()
+    if wallet is not None:
         return already_own_a_wallet
 
     wallet: Wallet = Wallet.create(user)
@@ -41,15 +40,12 @@ def get(data: dict, user: str) -> dict:
 
 @m.user_endpoint(path=["list"], requires={})
 def list_wallets(data: dict, user: str) -> dict:
-    return {"wallets": [
-        wallet.source_uuid
-        for wallet in wrapper.session.query(Wallet).filter_by(user_uuid=user)
-    ]}
+    return {"wallets": [wallet.source_uuid for wallet in wrapper.session.query(Wallet).filter_by(user_uuid=user)]}
 
 
 @m.user_endpoint(path=["send"], requires=scheme_send)
 def send(data: dict, user: str) -> dict:
-    usage: str = data['usage']
+    usage: str = data["usage"]
 
     if Wallet.auth_user(data["source_uuid"], data["key"]) is False:
         return permission_denied
@@ -93,8 +89,8 @@ def reset(data: dict, user: str) -> dict:
 
 @m.user_endpoint(path=["delete"], requires=scheme_default)
 def delete(data: dict, user: str) -> dict:
-    source_uuid: str = data['source_uuid']
-    key: str = data['key']
+    source_uuid: str = data["source_uuid"]
+    key: str = data["key"]
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid, key=key).first()
     if wallet is None:
         return unknown_source_or_destination
