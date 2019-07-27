@@ -1,20 +1,15 @@
 from scheme import *
 
-scheme_default: dict = {
-    "source_uuid": UUID(),
-    "key": Text(pattern=r'^[a-f0-9]{10}$'),
-}
+scheme_default: dict = {"source_uuid": UUID(), "key": Text(pattern=r"^[a-f0-9]{10}$")}
 
-scheme_reset: dict = {
-    "source_uuid": UUID()
-}
+scheme_reset: dict = {"source_uuid": UUID()}
 
 scheme_send: dict = {
     "source_uuid": UUID(),
-    "key": Text(pattern=r'^[a-f0-9]{10}$'),
+    "key": Text(pattern=r"^[a-f0-9]{10}$"),
     "send_amount": Integer(minimum=1),
     "destination_uuid": UUID(),
-    "usage": Text()
+    "usage": Text(),
 }
 
 success_scheme: dict = {"ok": True}

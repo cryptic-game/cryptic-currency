@@ -14,7 +14,7 @@ class Transaction(wrapper.Base):
     source_uuid: Union[Column, str] = Column(String(36))
     send_amount: Union[Column, int] = Column(Integer, nullable=False, default=0)
     destination_uuid: Union[Column, str] = Column(String(36))
-    usage: Union[Column, str] = Column(String(255), default='')
+    usage: Union[Column, str] = Column(String(255), default="")
     origin: Union[Column, Integer] = Column(Integer)
 
     @property
@@ -22,13 +22,13 @@ class Transaction(wrapper.Base):
         _: int = self.id
         d = self.__dict__.copy()
 
-        del d['_sa_instance_state']
+        del d["_sa_instance_state"]
         d["time_stamp"] = str(d["time_stamp"])
 
         return d
 
     @staticmethod
-    def create(source_uuid: str, send_amount: int, destination_uuid: str, usage: str, origin: int) -> 'Transaction':
+    def create(source_uuid: str, send_amount: int, destination_uuid: str, usage: str, origin: int) -> "Transaction":
         # create transaction and add it to database
         """
         Returns a transaction of a source_uuid.
@@ -41,7 +41,7 @@ class Transaction(wrapper.Base):
             send_amount=send_amount,
             destination_uuid=destination_uuid,
             usage=usage,
-            origin=origin
+            origin=origin,
         )
 
         # Add the new transaction to the db
@@ -53,7 +53,8 @@ class Transaction(wrapper.Base):
     @staticmethod
     def get(source_uuid: str) -> List[dict]:
         return [
-            transaction.serialize for transaction in
-            wrapper.session.query(Transaction).filter(or_(Transaction.source_uuid == source_uuid,
-                                                          Transaction.destination_uuid == source_uuid))
+            transaction.serialize
+            for transaction in wrapper.session.query(Transaction).filter(
+                or_(Transaction.source_uuid == source_uuid, Transaction.destination_uuid == source_uuid)
+            )
         ]
