@@ -31,7 +31,7 @@ class TestTransactionModel(TestCase):
 
         expected_result = {
             "id": 42,
-            "time_stamp": "1970-01-05 22:02:17",
+            "time_stamp": str(time_stamp),
             "source_uuid": "from",
             "send_amount": 7,
             "destination_uuid": "to",

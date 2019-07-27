@@ -23,7 +23,7 @@ class TestWalletModel(TestCase):
         )
 
         expected_result = {
-            "time_stamp": "1970-05-23 22:21:18",
+            "time_stamp": str(time_stamp),
             "source_uuid": "source uuid",
             "key": "the key!",
             "amount": 99999,
