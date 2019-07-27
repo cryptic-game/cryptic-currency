@@ -1,4 +1,4 @@
-cryptic-currency
+cryptic-currency [![Build Status](https://travis-ci.com/cryptic-game/cryptic-currency.svg?branch=experimental)](https://travis-ci.com/cryptic-game/cryptic-currency) [![Coverage Status](https://coveralls.io/repos/github/cryptic-game/cryptic-currency/badge.svg?branch=experimental)](https://coveralls.io/github/cryptic-game/cryptic-currency?branch=experimental)
 ============
 
 The official currency microservice of Cryptic (https://cryptic-game.net/).
