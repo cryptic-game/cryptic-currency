@@ -1,4 +1,4 @@
-cryptic-currency [![Build Status](https://travis-ci.com/cryptic-game/cryptic-currency.svg?branch=experimental)](https://travis-ci.com/cryptic-game/cryptic-currency) [![Coverage Status](https://coveralls.io/repos/github/cryptic-game/cryptic-currency/badge.svg?branch=experimental)](https://coveralls.io/github/cryptic-game/cryptic-currency?branch=experimental)
+cryptic-currency [![Build Status](https://travis-ci.org/cryptic-game/cryptic-currency.svg?branch=master)](https://travis-ci.org/cryptic-game/cryptic-currency) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=cryptic-game_cryptic-currency&metric=coverage)](https://sonarcloud.io/dashboard?id=cryptic-game_cryptic-currency)
 ============
 
 The official currency microservice of Cryptic (https://cryptic-game.net/).
