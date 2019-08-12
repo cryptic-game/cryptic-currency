@@ -8,7 +8,7 @@ from app import wrapper
 
 
 class Wallet(wrapper.Base):
-    __tablename__: str = "wallet"
+    __tablename__: str = "currency_wallet"
 
     time_stamp: Union[Column, datetime.datetime] = Column(DateTime, nullable=False)
     source_uuid: Union[Column, str] = Column(String(36), primary_key=True, unique=True)

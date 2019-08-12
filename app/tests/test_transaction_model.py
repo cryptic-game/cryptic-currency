@@ -12,7 +12,7 @@ class TestTransactionModel(TestCase):
         mock.reset_mocks()
 
     def test__model__transaction__structure(self):
-        self.assertEqual("transaction", Transaction.__tablename__)
+        self.assertEqual("currency_transaction", Transaction.__tablename__)
         self.assertTrue(issubclass(Transaction, mock.wrapper.Base))
         for col in ["id", "time_stamp", "source_uuid", "send_amount", "destination_uuid", "usage", "origin"]:
             self.assertIn(col, dir(Transaction))

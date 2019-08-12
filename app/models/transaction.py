@@ -7,7 +7,7 @@ from app import wrapper
 
 
 class Transaction(wrapper.Base):
-    __tablename__: str = "transaction"
+    __tablename__: str = "currency_transaction"
 
     id: Union[Column, int] = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     time_stamp: Union[Column, datetime.datetime] = Column(DateTime, nullable=False)
