@@ -11,7 +11,7 @@ class TestWalletModel(TestCase):
         mock.reset_mocks()
 
     def test__model__wallet__structure(self):
-        self.assertEqual("wallet", Wallet.__tablename__)
+        self.assertEqual("currency_wallet", Wallet.__tablename__)
         self.assertTrue(issubclass(Wallet, mock.wrapper.Base))
         for col in ["time_stamp", "source_uuid", "key", "amount", "user_uuid"]:
             self.assertIn(col, dir(Wallet))
