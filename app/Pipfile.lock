@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5f6837ce55547238a8e050efac4a7a1f354510debb797d7498febbd0008ee9a3"
+            "sha256": "647086e3ae03ae85afc5346610e802e1f9f359802ef415ed06c98d737592a25a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -24,6 +24,9 @@
             "version": "==2019.6.16"
         },
         "cryptic-game": {
+            "hashes": [
+                "sha256:bfe00e12ae817df4a98be1ded28c069f713903c5943bf9283349db91ff52e5b5"
+            ],
             "index": "pypi",
             "version": "==0.4.0.dev0"
         },
