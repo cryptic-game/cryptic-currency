@@ -1,14 +1,23 @@
-key_missing: dict = {"error": "Key 'key' has to be set for this endpoint"}
+from scheme import *
 
-source_uuid_missing: dict = {"error": "Key 'source_uuid' has to be set for this endpoint"}
+scheme_default: dict = {"source_uuid": UUID(), "key": Text(pattern=r"^[a-f0-9]{10}$")}
 
-invalid_key: dict = {"error": "invalid key"}
+scheme_reset: dict = {"source_uuid": UUID()}
 
-send_amount_missing: dict = {"error": "Key 'send_amount' has to be set for this endpoint"}
+scheme_send: dict = {
+    "source_uuid": UUID(),
+    "key": Text(pattern=r"^[a-f0-9]{10}$"),
+    "send_amount": Integer(minimum=1),
+    "destination_uuid": UUID(),
+    "usage": Text(),
+}
 
-destination_missing: dict = {"error": "Key 'destination_uuid' has to be set for this endpoint."}
+success_scheme: dict = {"ok": True}
 
-source_or_destination_invalid: dict = {
-    "error": "Your Souce or Destination uuid is invalid and can no be found in the database"}
+permission_denied: dict = {"error": "permission_denied"}
 
-you_make_debt: dict = {"error": "The source wallet would make debt transaction canceled"}
+already_own_a_wallet: dict = {"error": "already_own_a_wallet"}
+
+unknown_source_or_destination: dict = {"error": "unknown_source_or_destination"}
+
+not_enough_coins: dict = {"error": "not_enough_coins"}

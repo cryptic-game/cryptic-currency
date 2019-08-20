@@ -2,13 +2,13 @@ import datetime
 from typing import Union
 from uuid import uuid4
 
-from sqlalchemy import Column, Integer, String, DateTime, exists, and_
+from sqlalchemy import Column, Integer, String, DateTime
 
 from app import wrapper
 
 
 class Wallet(wrapper.Base):
-    __tablename__: str = "wallet"
+    __tablename__: str = "currency_wallet"
 
     time_stamp: Union[Column, datetime.datetime] = Column(DateTime, nullable=False)
     source_uuid: Union[Column, str] = Column(String(36), primary_key=True, unique=True)
@@ -19,21 +19,19 @@ class Wallet(wrapper.Base):
     @property
     def serialize(self) -> dict:
         _: str = self.source_uuid
-        d = self.__dict__
+        d = self.__dict__.copy()
 
-        del d['_sa_instance_state']
+        del d["_sa_instance_state"]
+        d["time_stamp"] = str(d["time_stamp"])
 
         return d
 
     @staticmethod
-    def create(user_uuid: str) -> dict:
+    def create(user_uuid: str) -> "Wallet":
         """
         Creates a new wallet.
         :return: dict with status
         """
-        # empty user uuid
-        if user_uuid == "":
-            return {"error": "You have to paste the user uuid to create a wallet."}
 
         source_uuid: str = str(uuid4())
         # uuid is 32 chars long -> now key is 10 chars long
@@ -41,19 +39,17 @@ class Wallet(wrapper.Base):
 
         # Create a new Wallet instance
         wallet: Wallet = Wallet(
-            time_stamp=datetime.datetime.now(),
-            source_uuid=source_uuid,
-            key=key,
-            amount=100,
-            user_uuid=user_uuid
+            time_stamp=datetime.datetime.now(), source_uuid=source_uuid, key=key, amount=100, user_uuid=user_uuid
         )
 
         # Add the new wallet to the db
         wrapper.session.add(wallet)
         wrapper.session.commit()
-        return {"success": "Your wallet has been created. ", "uuid": str(source_uuid), "key": str(key)}
+
+        return wallet
 
     @staticmethod
     def auth_user(source_uuid: str, key: str) -> bool:
         return wrapper.session.query(
-            wrapper.session.query(Wallet).filter(Wallet.source_uuid == source_uuid, Wallet.key == key).exists()).scalar()
+            wrapper.session.query(Wallet).filter(Wallet.source_uuid == source_uuid, Wallet.key == key).exists()
+        ).scalar()

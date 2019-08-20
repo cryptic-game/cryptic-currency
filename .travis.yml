@@ -1,0 +1,20 @@
+sudo: false
+dist: trusty
+language: python
+python: 3.7-dev
+
+env:
+  - PIPENV_IGNORE_VIRTUALENVS=1
+
+addons:
+  sonarcloud:
+    organization: "cryptic-game"
+    token:
+      secure: "HPoLqXa/IY8Lq+iMWK965kfx2B3U9WORGYSH/ekwP6y19mTTWqqSXYl/vcrLtV11jGho7gOZRBomTfEVK0coUYSRY4UHEfXBY0ytxjO4HG/zX61686z9zLJouf2JASZEolZ7nt0LMXH9a94iROazD2lUPTsg1pjHz2SZJmGPx0jT4/csyOOgMLGp1eAMzna6uzDdtdXkLNTrCE0SjSGNL6nRE+zu1C2fW+wj2j1Dvk80Z1avrEa5TqBcWzs6YjhP1/JNfwsdeCjnG7zDh+aJT3pdHWM2Xs45qXQruIoMrNNOWC0LHnwvvImo7+tCwm16GW6ZMLv7nhLAvxGWuca70PtLgB+P/S4aE736TwuDZHzPKy6Zp9PTF2yhvhcDQ1+uIOblzI1yh1WtKadXfHYOPc9we1o7QYfPDDXUqh4lldY4Nmv1Icuie0XpK3H4LPpTIwrwetZylm3+rvV3ovv32sAxmyxgLgvriuqonD/OuIGwPJW/AjxV9C6ILpDYcIEHna+YoQ0BXApm/6Y23x+exOZQ2m60IcfqRQaQcTXABahub/nrDbRnI1wRgJu7bC56gB8CGjvF6fcPvEua1DiwBSyuV4qQK/VufuV73QwF88SVnIjgXFbfnrNWoBbahGkt1ezbsHKyZssUFYBobTgPjPJrYIRZB6LbOALbRbKGSdk="
+
+install:
+  - cd app/ && pip install pipenv && pipenv sync --dev
+
+script:
+  - pipenv run coverage
+  - cd .. && sonar-scanner
