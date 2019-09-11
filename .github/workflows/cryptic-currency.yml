@@ -18,7 +18,9 @@ jobs:
         pip install pipenv
         pipenv sync --dev
     - name: Test
-      run: pipenv run coverage
+      run: |
+        cd app/
+        pipenv run coverage
     - name: SonarCloud scan
       uses: sonarsource/sonarcloud-github-action@master
       env:
