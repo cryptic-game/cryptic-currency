@@ -53,7 +53,7 @@ class TestApp(TestCase):
             (["delete"], scheme_default),
         ]
 
-        expected_ms_endpoints = [["exists"], ["put"], ["dump"]]
+        expected_ms_endpoints = [["exists"], ["put"], ["dump"], ["delete_user"]]
 
         for path, requires in expected_user_endpoints:
             self.assertIn((path, requires), registered_user_endpoints)

@@ -4,6 +4,13 @@ from unittest.mock import patch
 from mock.mock_loader import mock
 from models.wallet import Wallet
 from resources import wallet
+from schemes import (
+    success_scheme,
+    already_own_a_wallet,
+    unknown_source_or_destination,
+    permission_denied,
+    not_enough_coins,
+)
 
 
 class TestWallet(TestCase):
@@ -30,7 +37,7 @@ class TestWallet(TestCase):
     def test__user_endpoint__create__already_own_a_wallet(self):
         self.query_wallet.filter_by().first.return_value = "something"
 
-        expected_result = {"error": "already_own_a_wallet"}
+        expected_result = already_own_a_wallet
         actual_result = wallet.create({}, "the-user")
 
         self.assertEqual(expected_result, actual_result)
@@ -52,7 +59,7 @@ class TestWallet(TestCase):
     def test__user_endpoint__get__unknown_wallet(self):
         self.query_wallet.get.return_value = None
 
-        expected_result = {"error": "unknown_source_or_destination"}
+        expected_result = unknown_source_or_destination
         actual_result = wallet.get({"source_uuid": "source", "key": "the-key"}, "")
 
         self.assertEqual(expected_result, actual_result)
@@ -64,7 +71,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.get.return_value = test_wallet
 
-        expected_result = {"error": "permission_denied"}
+        expected_result = permission_denied
         actual_result = wallet.get({"source_uuid": "source", "key": "wrong-key"}, "")
 
         self.assertEqual(expected_result, actual_result)
@@ -102,7 +109,7 @@ class TestWallet(TestCase):
     def test__user_endpoint__send__permission_denied(self, auth_user_patch):
         auth_user_patch.return_value = False
 
-        expected_result = {"error": "permission_denied"}
+        expected_result = permission_denied
         actual_result = wallet.send(
             {"source_uuid": "source", "key": "key", "send_amount": 42, "destination": "dest", "usage": "text"}, ""
         )
@@ -125,7 +132,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by.side_effect = filter_by_handler
 
-        expected_result = {"error": "unknown_source_or_destination"}
+        expected_result = unknown_source_or_destination
         actual_result = wallet.send(
             {"source_uuid": "source", "key": "key", "send_amount": 42, "destination_uuid": "dest", "usage": "text"}, ""
         )
@@ -148,7 +155,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by.side_effect = filter_by_handler
 
-        expected_result = {"error": "unknown_source_or_destination"}
+        expected_result = unknown_source_or_destination
         actual_result = wallet.send(
             {"source_uuid": "source", "key": "key", "send_amount": 42, "destination_uuid": "dest", "usage": "text"}, ""
         )
@@ -176,7 +183,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by.side_effect = filter_by_handler
 
-        expected_result = {"error": "not_enough_coins"}
+        expected_result = not_enough_coins
         actual_result = wallet.send(
             {"source_uuid": "source", "key": "key", "send_amount": 42, "destination_uuid": "dest", "usage": "text"}, ""
         )
@@ -207,7 +214,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by.side_effect = filter_by_handler
 
-        expected_result = {"ok": True}
+        expected_result = success_scheme
         actual_result = wallet.send(
             {"source_uuid": "source", "key": "key", "send_amount": 42, "destination_uuid": "dest", "usage": "text"}, ""
         )
@@ -223,7 +230,7 @@ class TestWallet(TestCase):
     def test__user_endpoint__reset__unknown_wallet(self):
         self.query_wallet.filter_by().first.return_value = None
 
-        expected_result = {"error": "unknown_source_or_destination"}
+        expected_result = unknown_source_or_destination
         actual_result = wallet.reset({"source_uuid": "the-source"}, "user-uuid")
 
         self.assertEqual(expected_result, actual_result)
@@ -236,7 +243,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by().first.return_value = test_wallet
 
-        expected_result = {"error": "permission_denied"}
+        expected_result = permission_denied
         actual_result = wallet.reset({"source_uuid": "the-source"}, "wrong-user")
 
         self.assertEqual(expected_result, actual_result)
@@ -249,7 +256,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by().first.return_value = test_wallet
 
-        expected_result = {"ok": True}
+        expected_result = success_scheme
         actual_result = wallet.reset({"source_uuid": "the-source"}, "the-user")
 
         self.assertEqual(expected_result, actual_result)
@@ -261,7 +268,7 @@ class TestWallet(TestCase):
     def test__user_endpoint__delete__unknown_wallet(self):
         self.query_wallet.filter_by().first.return_value = None
 
-        expected_result = {"error": "unknown_source_or_destination"}
+        expected_result = unknown_source_or_destination
         actual_result = wallet.delete({"source_uuid": "source", "key": "the-key"}, "")
 
         self.assertEqual(expected_result, actual_result)
@@ -273,7 +280,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by().first.return_value = test_wallet
 
-        expected_result = {"ok": True}
+        expected_result = success_scheme
         actual_result = wallet.delete({"source_uuid": "source", "key": "the-key"}, "")
 
         self.assertEqual(expected_result, actual_result)
@@ -305,7 +312,7 @@ class TestWallet(TestCase):
     def test__ms_endpoint__put__unknown_wallet(self):
         self.query_wallet.filter_by().first.return_value = None
 
-        expected_result = {"error": "unknown_source_or_destination"}
+        expected_result = unknown_source_or_destination
         actual_result = wallet.put({"destination_uuid": "destination", "amount": 42}, "")
 
         self.assertEqual(expected_result, actual_result)
@@ -318,7 +325,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by().first.return_value = test_wallet
 
-        expected_result = {"ok": True}
+        expected_result = success_scheme
         actual_result = wallet.put({"destination_uuid": "destination", "amount": 42, "create_transaction": False}, "")
 
         self.assertEqual(expected_result, actual_result)
@@ -357,7 +364,7 @@ class TestWallet(TestCase):
     def test__ms_endpoint__dump__unknown_wallet(self):
         self.query_wallet.filter_by().first.return_value = None
 
-        expected_result = {"error": "unknown_source_or_destination"}
+        expected_result = unknown_source_or_destination
         actual_result = wallet.dump({"source_uuid": "src", "key": "the-key", "amount": 1337}, "")
 
         self.assertEqual(expected_result, actual_result)
@@ -370,7 +377,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by().first.return_value = test_wallet
 
-        expected_result = {"error": "permission_denied"}
+        expected_result = permission_denied
         actual_result = wallet.dump({"source_uuid": "src", "key": "the-key", "amount": 1337}, "")
 
         self.assertEqual(expected_result, actual_result)
@@ -385,7 +392,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by().first.return_value = test_wallet
 
-        expected_result = {"error": "not_enough_coins"}
+        expected_result = not_enough_coins
         actual_result = wallet.dump({"source_uuid": "src", "key": "wallet-key", "amount": 1337}, "")
 
         self.assertEqual(expected_result, actual_result)
@@ -401,7 +408,7 @@ class TestWallet(TestCase):
 
         self.query_wallet.filter_by().first.return_value = test_wallet
 
-        expected_result = {"ok": True}
+        expected_result = success_scheme
         actual_result = wallet.dump(
             {"source_uuid": "src", "key": "wallet-key", "amount": 1337, "create_transaction": False}, ""
         )
@@ -443,3 +450,10 @@ class TestWallet(TestCase):
         self.assertEqual(42, test_wallet.amount)
         mock.wrapper.session.commit.assert_called_with()
         transaction_patch.create.assert_called_with("src", 1337, "dest", "the usage", 11)
+
+    def test__ms_endpoint__delete_user(self):
+        self.assertEqual(success_scheme, wallet.delete_user({"user_uuid": "the-user"}, "server"))
+
+        self.query_wallet.filter_by.assert_called_with(user_uuid="the-user")
+        self.query_wallet.filter_by().delete.assert_called_with()
+        mock.wrapper.session.commit.assert_called_with()
