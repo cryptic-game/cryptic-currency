@@ -1,4 +1,4 @@
-from scheme import *
+from scheme import Text, Integer, UUID
 
 scheme_default: dict = {"source_uuid": UUID(), "key": Text(pattern=r"^[a-f0-9]{10}$")}
 

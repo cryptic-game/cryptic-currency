@@ -157,3 +157,13 @@ def dump(data: dict, microservice: str) -> dict:
 
     transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
     return transaction.serialize
+
+
+@m.microservice_endpoint(path=["delete_user"])
+def delete_user(data: dict, microservice: str) -> dict:
+    user: str = data["user_uuid"]
+
+    wrapper.session.query(Wallet).filter_by(user_uuid=user).delete()
+    wrapper.session.commit()
+
+    return success_scheme
