@@ -2,6 +2,7 @@ from importlib import machinery, util
 from unittest import TestCase
 
 from mock.mock_loader import mock
+from resources import wallet
 from schemes import scheme_default, scheme_send, scheme_reset
 
 
@@ -45,25 +46,32 @@ class TestApp(TestCase):
         registered_ms_endpoints = mock.ms_endpoints.copy()
 
         expected_user_endpoints = [
-            (["create"], {}),
-            (["get"], scheme_default),
-            (["list"], {}),
-            (["send"], scheme_send),
-            (["reset"], scheme_reset),
-            (["delete"], scheme_default),
+            (["create"], {}, wallet.create),
+            (["get"], scheme_default, wallet.get),
+            (["list"], {}, wallet.list_wallets),
+            (["send"], scheme_send, wallet.send),
+            (["reset"], scheme_reset, wallet.reset),
+            (["delete"], scheme_default, wallet.delete),
         ]
 
-        expected_ms_endpoints = [["exists"], ["put"], ["dump"], ["delete_user"]]
+        expected_ms_endpoints = [
+            (["exists"], wallet.exists),
+            (["put"], wallet.put),
+            (["dump"], wallet.dump),
+            (["delete_user"], wallet.delete_user),
+        ]
 
-        for path, requires in expected_user_endpoints:
+        for path, requires, func in expected_user_endpoints:
             self.assertIn((path, requires), registered_user_endpoints)
             registered_user_endpoints.remove((path, requires))
             self.assertIn(mock.user_endpoint_handlers[tuple(path)], elements)
+            self.assertEqual(func, mock.user_endpoint_handlers[tuple(path)])
 
-        for path in expected_ms_endpoints:
+        for path, func in expected_ms_endpoints:
             self.assertIn(path, registered_ms_endpoints)
             registered_ms_endpoints.remove(path)
             self.assertIn(mock.ms_endpoint_handlers[tuple(path)], elements)
+            self.assertEqual(func, mock.ms_endpoint_handlers[tuple(path)])
 
         self.assertFalse(registered_user_endpoints)
         self.assertFalse(registered_ms_endpoints)
