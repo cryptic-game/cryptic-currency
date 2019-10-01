@@ -253,6 +253,7 @@ class TestWallet(TestCase):
     def test__user_endpoint__reset__successful(self):
         test_wallet = mock.MagicMock()
         test_wallet.user_uuid = "the-user"
+        test_wallet.source_uuid = "the-source"
 
         self.query_wallet.filter_by().first.return_value = test_wallet
 
@@ -262,6 +263,7 @@ class TestWallet(TestCase):
         self.assertEqual(expected_result, actual_result)
         self.query_wallet.filter_by.assert_called_with(source_uuid="the-source")
         self.query_wallet.filter_by().first.assert_called_with()
+        mock.m.contact_microservice.assert_called_with("service", ["miner", "stop"], {"wallet_uuid": "the-source"})
         mock.wrapper.session.delete.assert_called_with(test_wallet)
         mock.wrapper.session.commit.assert_called_with()
 
@@ -277,6 +279,7 @@ class TestWallet(TestCase):
 
     def test__user_endpoint__delete__successful(self):
         test_wallet = mock.MagicMock()
+        test_wallet.source_uuid = "source"
 
         self.query_wallet.filter_by().first.return_value = test_wallet
 
@@ -286,6 +289,7 @@ class TestWallet(TestCase):
         self.assertEqual(expected_result, actual_result)
         self.query_wallet.filter_by.assert_called_with(source_uuid="source", key="the-key")
         self.query_wallet.filter_by().first.assert_called_with()
+        mock.m.contact_microservice.assert_called_with("service", ["miner", "stop"], {"wallet_uuid": "source"})
         mock.wrapper.session.delete.assert_called_with(test_wallet)
         mock.wrapper.session.commit.assert_called_with()
 
