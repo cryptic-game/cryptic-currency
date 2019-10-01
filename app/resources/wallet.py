@@ -81,6 +81,8 @@ def reset(data: dict, user: str) -> dict:
     if wallet.user_uuid != user:
         return permission_denied
 
+    m.contact_microservice("service", ["toggle_miner"], {"wallet_uuid": wallet.source_uuid})
+
     wrapper.session.delete(wallet)
     wrapper.session.commit()
 
@@ -94,6 +96,8 @@ def delete(data: dict, user: str) -> dict:
     wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid, key=key).first()
     if wallet is None:
         return unknown_source_or_destination
+
+    m.contact_microservice("service", ["toggle_miner"], {"wallet_uuid": wallet.source_uuid})
 
     wrapper.session.delete(wallet)
     wrapper.session.commit()
