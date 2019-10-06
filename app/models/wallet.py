@@ -39,7 +39,7 @@ class Wallet(wrapper.Base):
 
         # Create a new Wallet instance
         wallet: Wallet = Wallet(
-            time_stamp=datetime.datetime.now(), source_uuid=source_uuid, key=key, amount=100, user_uuid=user_uuid
+            time_stamp=datetime.datetime.now(), source_uuid=source_uuid, key=key, amount=0, user_uuid=user_uuid
         )
 
         # Add the new wallet to the db

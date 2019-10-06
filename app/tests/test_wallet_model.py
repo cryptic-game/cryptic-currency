@@ -41,7 +41,7 @@ class TestWalletModel(TestCase):
         actual_result = Wallet.create("the-user-uuid")
 
         self.assertEqual("the-user-uuid", actual_result.user_uuid)
-        self.assertEqual(100, actual_result.amount)
+        self.assertEqual(0, actual_result.amount)
         self.assertRegex(actual_result.source_uuid, r"[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}")
         self.assertRegex(actual_result.key, r"[0-9a-f]{10}")
         self.assertLess(abs((actual_result.time_stamp - now).total_seconds()), 0.01)
