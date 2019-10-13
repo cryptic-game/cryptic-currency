@@ -34,7 +34,7 @@ If you only need a mysql-server you can bring it up with:
 
 ## Docker-Hub
 
-This microservice is online on docker-hub (https://hub.docker.com/r/useto/cryptic-currency/).
+This microservice is online on docker-hub (https://hub.docker.com/r/crypticcp/cryptic-currency/).
 
 ## API 
 
