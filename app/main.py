@@ -1,9 +1,11 @@
 import app
 
 
+# noinspection PyUnresolvedReferences
+def load_endpoints():
+    import resources.wallet
+
+
 if __name__ == "__main__":
-    from resources.wallet import *
-
-    app.wrapper.Base.metadata.create_all(bind=wrapper.engine)
-
+    load_endpoints()
     app.m.run()
