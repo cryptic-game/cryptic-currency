@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from mock.mock_loader import mock
 from resources import wallet
+from resources.errors import wallet_exists, can_access_wallet
 from schemes import scheme_default, scheme_send, scheme_reset
 
 
@@ -52,31 +53,41 @@ class TestApp(TestCase):
 
         expected_user_endpoints = [
             (["create"], {}, wallet.create),
-            (["get"], scheme_default, wallet.get),
+            (["get"], scheme_default, wallet.get, wallet_exists, can_access_wallet),
             (["list"], {}, wallet.list_wallets),
-            (["send"], scheme_send, wallet.send),
-            (["reset"], scheme_reset, wallet.reset),
-            (["delete"], scheme_default, wallet.delete),
+            (["send"], scheme_send, wallet.send, wallet_exists, can_access_wallet),
+            (["reset"], scheme_reset, wallet.reset, wallet_exists),
+            (["delete"], scheme_default, wallet.delete, wallet_exists, can_access_wallet),
         ]
 
         expected_ms_endpoints = [
             (["exists"], wallet.exists),
             (["put"], wallet.put),
-            (["dump"], wallet.dump),
+            (["dump"], wallet.dump, wallet_exists, can_access_wallet),
             (["delete_user"], wallet.delete_user),
         ]
 
-        for path, requires, func in expected_user_endpoints:
+        for path, requires, func, *errors in expected_user_endpoints:
             self.assertIn((path, requires), registered_user_endpoints)
+            endpoint_handler = mock.user_endpoint_handlers[tuple(path)]
             registered_user_endpoints.remove((path, requires))
-            self.assertIn(mock.user_endpoint_handlers[tuple(path)], elements)
-            self.assertEqual(func, mock.user_endpoint_handlers[tuple(path)])
+            self.assertIn(endpoint_handler, elements)
+            self.assertEqual(func, endpoint_handler)
+            if errors:
+                self.assertEqual(tuple(errors), endpoint_handler.__errors__)
+            else:
+                self.assertNotIn("__errors__", dir(endpoint_handler))
 
-        for path, func in expected_ms_endpoints:
+        for path, func, *errors in expected_ms_endpoints:
             self.assertIn(path, registered_ms_endpoints)
+            endpoint_handler = mock.ms_endpoint_handlers[tuple(path)]
             registered_ms_endpoints.remove(path)
-            self.assertIn(mock.ms_endpoint_handlers[tuple(path)], elements)
-            self.assertEqual(func, mock.ms_endpoint_handlers[tuple(path)])
+            self.assertIn(endpoint_handler, elements)
+            self.assertEqual(func, endpoint_handler)
+            if errors:
+                self.assertEqual(tuple(errors), endpoint_handler.__errors__)
+            else:
+                self.assertNotIn("__errors__", dir(endpoint_handler))
 
         self.assertFalse(registered_user_endpoints)
         self.assertFalse(registered_ms_endpoints)
