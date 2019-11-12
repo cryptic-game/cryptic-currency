@@ -1,8 +1,11 @@
 from typing import Optional
 
+from cryptic import register_errors
+
 from app import m, wrapper
 from models.transaction import Transaction
 from models.wallet import Wallet
+from resources.errors import wallet_exists, can_access_wallet
 from schemes import *
 
 
@@ -25,17 +28,11 @@ def create(data: dict, user: str) -> dict:
 
 
 @m.user_endpoint(path=["get"], requires=scheme_default)
-def get(data: dict, user: str) -> dict:
-    source_uuid: str = data["source_uuid"]
-    wallet: Wallet = wrapper.session.query(Wallet).get(source_uuid)
-    if wallet is None:
-        return unknown_source_or_destination
-    if wallet.key != data["key"]:
-        return permission_denied
-
+@register_errors(wallet_exists, can_access_wallet)
+def get(data: dict, user: str, wallet: Wallet) -> dict:
     update_miner(wallet)
 
-    return {**wallet.serialize, "transactions": Transaction.get(source_uuid)}
+    return {**wallet.serialize, "transactions": Transaction.get(wallet.source_uuid)}
 
 
 @m.user_endpoint(path=["list"], requires={})
@@ -44,40 +41,32 @@ def list_wallets(data: dict, user: str) -> dict:
 
 
 @m.user_endpoint(path=["send"], requires=scheme_send)
-def send(data: dict, user: str) -> dict:
-    usage: str = data["usage"]
+@register_errors(wallet_exists, can_access_wallet)
+def send(data: dict, user: str, source_wallet: Wallet) -> dict:
+    destination_uuid: str = data["destination_uuid"]
+    destination_wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=destination_uuid).first()
 
-    if Wallet.auth_user(data["source_uuid"], data["key"]) is False:
-        return permission_denied
-
-    source_wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=data["source_uuid"]).first()
-    destination_wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=data["destination_uuid"]).first()
-
-    if source_wallet is None or destination_wallet is None:
+    if destination_wallet is None:
         return unknown_source_or_destination
 
     update_miner(source_wallet)
 
-    if source_wallet.amount - data["send_amount"] < 0 or data["send_amount"] < 0:
+    amount: int = data["send_amount"]
+    if source_wallet.amount - amount < 0 or amount < 0:
         return not_enough_coins
 
-    source_wallet.amount -= data["send_amount"]
-    destination_wallet.amount += data["send_amount"]
+    source_wallet.amount -= amount
+    destination_wallet.amount += amount
     wrapper.session.commit()
 
-    Transaction.create(data["source_uuid"], data["send_amount"], data["destination_uuid"], usage, origin=0)
+    Transaction.create(source_wallet.source_uuid, amount, destination_uuid, data["usage"], origin=0)
 
     return success_scheme
 
 
 @m.user_endpoint(path=["reset"], requires=scheme_reset)
-def reset(data: dict, user: str) -> dict:
-    source_uuid: str = data["source_uuid"]
-
-    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid).first()
-    if wallet is None:
-        return unknown_source_or_destination
-
+@register_errors(wallet_exists)
+def reset(data: dict, user: str, wallet: Wallet) -> dict:
     if wallet.user_uuid != user:
         return permission_denied
 
@@ -90,13 +79,8 @@ def reset(data: dict, user: str) -> dict:
 
 
 @m.user_endpoint(path=["delete"], requires=scheme_default)
-def delete(data: dict, user: str) -> dict:
-    source_uuid: str = data["source_uuid"]
-    key: str = data["key"]
-    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid, key=key).first()
-    if wallet is None:
-        return unknown_source_or_destination
-
+@register_errors(wallet_exists, can_access_wallet)
+def delete(data: dict, user: str, wallet: Wallet) -> dict:
     m.contact_microservice("service", ["miner", "stop"], {"wallet_uuid": wallet.source_uuid})
 
     wrapper.session.delete(wallet)
@@ -134,16 +118,9 @@ def put(data: dict, microservice: str) -> dict:
 
 
 @m.microservice_endpoint(path=["dump"])
-def dump(data: dict, microservice: str) -> dict:
-    source_uuid: str = data["source_uuid"]
-    key: str = data["key"]
+@register_errors(wallet_exists, can_access_wallet)
+def dump(data: dict, microservice: str, wallet: Wallet) -> dict:
     amount: int = data["amount"]
-
-    wallet: Wallet = wrapper.session.query(Wallet).filter_by(source_uuid=source_uuid).first()
-    if wallet is None:
-        return unknown_source_or_destination
-    if wallet.key != key:
-        return permission_denied
 
     update_miner(wallet)
 
@@ -159,7 +136,7 @@ def dump(data: dict, microservice: str) -> dict:
     usage: str = data["usage"]
     origin: int = data["origin"]
 
-    transaction: Transaction = Transaction.create(source_uuid, amount, destination_uuid, usage, origin)
+    transaction: Transaction = Transaction.create(wallet.source_uuid, amount, destination_uuid, usage, origin)
     return transaction.serialize
 
 
