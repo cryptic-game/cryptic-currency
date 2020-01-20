@@ -108,6 +108,28 @@ class TestWallet(TestCase):
         dest_wallet = self.query_wallet.filter_by().first.return_value = mock.MagicMock()
         dest_wallet.amount = 50
 
+        expected_calls = [
+            (
+                source_wallet.user_uuid,
+                {
+                    "notify-id": "outgoing-transaction",
+                    "origin": "send",
+                    "wallet_uuid": source_wallet.source_uuid,
+                    "new_amount": 100 - 42,
+                },
+            ),
+            (
+                dest_wallet.user_uuid,
+                {
+                    "notify-id": "incoming-transaction",
+                    "origin": "send",
+                    "wallet_uuid": dest_wallet.source_uuid,
+                    "new_amount": 50 + 42,
+                },
+            ),
+        ]
+        mock.m.contact_user.side_effect = lambda *args: self.assertEqual(expected_calls.pop(0), args)
+
         expected_result = success_scheme
         actual_result = wallet.send({"send_amount": 42, "destination_uuid": "dest", "usage": "text"}, "", source_wallet)
 
@@ -117,6 +139,7 @@ class TestWallet(TestCase):
         self.assertEqual(50 + 42, dest_wallet.amount)
         mock.wrapper.session.commit.assert_called_with()
         transaction_patch.create.assert_called_with(source_wallet.source_uuid, 42, "dest", "text", origin=0)
+        self.assertFalse(expected_calls)
 
     def test__user_endpoint__reset__permission_denied(self):
         test_wallet = mock.MagicMock()
@@ -198,6 +221,15 @@ class TestWallet(TestCase):
         self.query_wallet.filter_by().first.assert_called_with()
         self.assertEqual(1337, test_wallet.amount)
         mock.wrapper.session.commit.assert_called_with()
+        mock.m.contact_user.assert_called_with(
+            test_wallet.user_uuid,
+            {
+                "notify-id": "incoming-transaction",
+                "origin": "put",
+                "wallet_uuid": test_wallet.source_uuid,
+                "new_amount": 1337,
+            },
+        )
 
     @patch("resources.wallet.Transaction")
     def test__ms_endpoint__put__with_transaction(self, transaction_patch):
@@ -224,6 +256,15 @@ class TestWallet(TestCase):
         self.query_wallet.filter_by().first.assert_called_with()
         self.assertEqual(1337, test_wallet.amount)
         mock.wrapper.session.commit.assert_called_with()
+        mock.m.contact_user.assert_called_with(
+            test_wallet.user_uuid,
+            {
+                "notify-id": "incoming-transaction",
+                "origin": "put",
+                "wallet_uuid": test_wallet.source_uuid,
+                "new_amount": 1337,
+            },
+        )
         transaction_patch.create.assert_called_with("source", 42, "destination", "the usage", 13)
 
     @patch("resources.wallet.update_miner")
@@ -249,6 +290,15 @@ class TestWallet(TestCase):
         update_miner_patch.assert_called_with(test_wallet)
         self.assertEqual(42, test_wallet.amount)
         mock.wrapper.session.commit.assert_called_with()
+        mock.m.contact_user.assert_called_with(
+            test_wallet.user_uuid,
+            {
+                "notify-id": "outgoing-transaction",
+                "origin": "dump",
+                "wallet_uuid": test_wallet.source_uuid,
+                "new_amount": 42,
+            },
+        )
 
     @patch("resources.wallet.Transaction")
     @patch("resources.wallet.update_miner")
@@ -273,6 +323,15 @@ class TestWallet(TestCase):
         update_miner_patch.assert_called_with(test_wallet)
         self.assertEqual(42, test_wallet.amount)
         mock.wrapper.session.commit.assert_called_with()
+        mock.m.contact_user.assert_called_with(
+            test_wallet.user_uuid,
+            {
+                "notify-id": "outgoing-transaction",
+                "origin": "dump",
+                "wallet_uuid": test_wallet.source_uuid,
+                "new_amount": 42,
+            },
+        )
         transaction_patch.create.assert_called_with(test_wallet.source_uuid, 1337, "dest", "the usage", 11)
 
     def test__ms_endpoint__delete_user(self):
