@@ -61,6 +61,25 @@ def send(data: dict, user: str, source_wallet: Wallet) -> dict:
 
     Transaction.create(source_wallet.source_uuid, amount, destination_uuid, data["usage"], origin=0)
 
+    m.contact_user(
+        source_wallet.user_uuid,
+        {
+            "notify-id": "outgoing-transaction",
+            "origin": "send",
+            "wallet_uuid": source_wallet.source_uuid,
+            "new_amount": source_wallet.amount,
+        },
+    )
+    m.contact_user(
+        destination_wallet.user_uuid,
+        {
+            "notify-id": "incoming-transaction",
+            "origin": "send",
+            "wallet_uuid": destination_wallet.source_uuid,
+            "new_amount": destination_wallet.amount,
+        },
+    )
+
     return success_scheme
 
 
@@ -106,6 +125,16 @@ def put(data: dict, microservice: str) -> dict:
     wallet.amount += amount
     wrapper.session.commit()
 
+    m.contact_user(
+        wallet.user_uuid,
+        {
+            "notify-id": "incoming-transaction",
+            "origin": "put",
+            "wallet_uuid": wallet.source_uuid,
+            "new_amount": wallet.amount,
+        },
+    )
+
     if not data["create_transaction"]:
         return success_scheme
 
@@ -128,6 +157,16 @@ def dump(data: dict, microservice: str, wallet: Wallet) -> dict:
         return not_enough_coins
     wallet.amount -= amount
     wrapper.session.commit()
+
+    m.contact_user(
+        wallet.user_uuid,
+        {
+            "notify-id": "outgoing-transaction",
+            "origin": "dump",
+            "wallet_uuid": wallet.source_uuid,
+            "new_amount": wallet.amount,
+        },
+    )
 
     if not data["create_transaction"]:
         return success_scheme
