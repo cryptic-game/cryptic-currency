@@ -62,6 +62,7 @@ class TestApp(TestCase):
 
         expected_ms_endpoints = [
             (["exists"], wallet.exists),
+            (["owner"], wallet.owner),
             (["put"], wallet.put),
             (["dump"], wallet.dump, wallet_exists, can_access_wallet),
             (["delete_user"], wallet.delete_user),
