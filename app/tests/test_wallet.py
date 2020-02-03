@@ -197,6 +197,26 @@ class TestWallet(TestCase):
         self.query_wallet.filter_by.assert_called_with(source_uuid="the-source")
         self.query_wallet.filter_by().first.assert_called_with()
 
+    def test__ms_endpoint__owner__does_not_exist(self):
+        self.query_wallet.filter_by().first.return_value = None
+
+        expected_result = unknown_source_or_destination
+        actual_result = wallet.owner({"source_uuid": "the-source"}, "")
+
+        self.assertEqual(expected_result, actual_result)
+        self.query_wallet.filter_by.assert_called_with(source_uuid="the-source")
+        self.query_wallet.filter_by().first.assert_called_with()
+
+    def test__ms_endpoint__owner__successful(self):
+        mock_wallet = self.query_wallet.filter_by().first.return_value = mock.MagicMock()
+
+        expected_result = {"owner": mock_wallet.user_uuid}
+        actual_result = wallet.owner({"source_uuid": "the-source"}, "")
+
+        self.assertEqual(expected_result, actual_result)
+        self.query_wallet.filter_by.assert_called_with(source_uuid="the-source")
+        self.query_wallet.filter_by().first.assert_called_with()
+
     def test__ms_endpoint__put__unknown_wallet(self):
         self.query_wallet.filter_by().first.return_value = None
 

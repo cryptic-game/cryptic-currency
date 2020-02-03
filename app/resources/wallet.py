@@ -113,6 +113,15 @@ def exists(data: dict, microservice: str) -> dict:
     return {"exists": wrapper.session.query(Wallet).filter_by(source_uuid=data["source_uuid"]).first() is not None}
 
 
+@m.microservice_endpoint(path=["owner"])
+def owner(data: dict, microservice: str) -> dict:
+    wallet: Optional[Wallet] = wrapper.session.query(Wallet).filter_by(source_uuid=data["source_uuid"]).first()
+    if wallet is None:
+        return unknown_source_or_destination
+
+    return {"owner": wallet.user_uuid}
+
+
 @m.microservice_endpoint(path=["put"])
 def put(data: dict, microservice: str) -> dict:
     amount: int = data["amount"]
