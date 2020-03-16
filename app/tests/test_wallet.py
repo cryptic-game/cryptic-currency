@@ -61,12 +61,22 @@ class TestWallet(TestCase):
     def test__user_endpoint__get__successful(self, transaction_patch, update_miner_patch):
         test_wallet = mock.MagicMock()
 
-        expected_result = {**test_wallet.serialize, "transactions": transaction_patch.get()}
+        expected_result = {**test_wallet.serialize, "transactions": transaction_patch.count_transactions()}
         actual_result = wallet.get({}, "", test_wallet)
 
         self.assertEqual(expected_result, actual_result)
         update_miner_patch.assert_called_with(test_wallet)
-        transaction_patch.get.assert_called_with(test_wallet.source_uuid)
+        transaction_patch.count_transactions.assert_called_with(test_wallet.source_uuid)
+
+    @patch("resources.wallet.Transaction")
+    def test__user_endpoint__transactions__successful(self, transaction_patch):
+        test_wallet = mock.MagicMock()
+
+        expected_result = {"transactions": transaction_patch.slice_transactions()}
+        actual_result = wallet.transactions({"count": 42, "offset": 1337}, "", test_wallet)
+
+        self.assertEqual(expected_result, actual_result)
+        transaction_patch.slice_transactions.assert_called_with(test_wallet.source_uuid, 1337, 42)
 
     def test__user_endpoint__list(self):
         wallets = [mock.MagicMock() for _ in range(5)]

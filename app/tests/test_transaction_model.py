@@ -62,20 +62,47 @@ class TestTransactionModel(TestCase):
     @patch("models.transaction.Transaction.destination_uuid")
     @patch("models.transaction.Transaction.source_uuid")
     @patch("models.transaction.or_")
-    def test__model__transaction__get(self, or_patch, source_uuid_patch, destination_uuid_patch):
-        transactions = [mock.MagicMock() for _ in range(5)]
-
+    def test__model__transaction__query(self, or_patch, source_uuid_patch, destination_uuid_patch):
         query_transaction = mock.MagicMock()
         mock.wrapper.session.query.side_effect = {Transaction: query_transaction}.__getitem__
-        query_transaction.filter.return_value = transactions
         source_uuid_patch.__eq__.return_value = "source-eq"
         destination_uuid_patch.__eq__.return_value = "dest-eq"
 
-        expected_result = [transaction.serialize for transaction in transactions]
-        actual_result = Transaction.get("test-uuid")
+        expected_result = query_transaction.filter.return_value
+        actual_result = Transaction.query("test-uuid")
 
         self.assertEqual(expected_result, actual_result)
         source_uuid_patch.__eq__.assert_called_with("test-uuid")
         destination_uuid_patch.__eq__.assert_called_with("test-uuid")
         or_patch.assert_called_with("source-eq", "dest-eq")
         query_transaction.filter.assert_called_with(or_patch())
+
+    @patch("models.transaction.Transaction.query")
+    def test__model__transaction__count_transactions(self, query_patch):
+        source = mock.MagicMock()
+
+        expected_result = query_patch().count()
+        actual_result = Transaction.count_transactions(source)
+
+        self.assertEqual(expected_result, actual_result)
+        query_patch.assert_called_with(source)
+
+    @patch("models.transaction.Transaction.time_stamp")
+    @patch("models.transaction.desc")
+    @patch("models.transaction.Transaction.query")
+    def test__model__transaction__slice_transactions(self, query_patch, desc_patch, timestamp_patch):
+        source = mock.MagicMock()
+        offset = 42
+        count = 1337
+
+        transactions = [mock.MagicMock() for _ in range(5)]
+        query_patch().order_by().slice.return_value = transactions
+
+        expected_result = [t.serialize for t in transactions]
+        actual_result = Transaction.slice_transactions(source, offset, count)
+
+        self.assertEqual(expected_result, actual_result)
+        query_patch.assert_called_with(source)
+        desc_patch.assert_called_with(timestamp_patch)
+        query_patch().order_by.assert_called_with(desc_patch())
+        query_patch().order_by().slice.assert_called_with(offset, offset + count)
