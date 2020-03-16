@@ -1,7 +1,8 @@
 import datetime
 from typing import Union, List
 
-from sqlalchemy import Column, Integer, String, DateTime, or_
+from sqlalchemy import Column, Integer, String, DateTime, or_, desc
+from sqlalchemy.orm import Query
 
 from app import wrapper
 
@@ -51,10 +52,20 @@ class Transaction(wrapper.Base):
         return transaction
 
     @staticmethod
-    def get(source_uuid: str) -> List[dict]:
+    def query(source_uuid: str) -> Query:
+        return wrapper.session.query(Transaction).filter(
+            or_(Transaction.source_uuid == source_uuid, Transaction.destination_uuid == source_uuid)
+        )
+
+    @staticmethod
+    def count_transactions(source_uuid: str) -> int:
+        return Transaction.query(source_uuid).count()
+
+    @staticmethod
+    def slice_transactions(source_uuid: str, offset: int, count: int) -> List[dict]:
         return [
             transaction.serialize
-            for transaction in wrapper.session.query(Transaction).filter(
-                or_(Transaction.source_uuid == source_uuid, Transaction.destination_uuid == source_uuid)
-            )
+            for transaction in Transaction.query(source_uuid)
+            .order_by(desc(Transaction.time_stamp))
+            .slice(offset, offset + count)
         ]
