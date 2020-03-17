@@ -4,6 +4,8 @@ scheme_default: dict = {"source_uuid": UUID(), "key": Text(pattern=r"^[a-f0-9]{1
 
 scheme_reset: dict = {"source_uuid": UUID()}
 
+scheme_transactions: dict = {**scheme_default, "offset": Integer(minimum=0), "count": Integer(minimum=1)}
+
 scheme_send: dict = {
     "source_uuid": UUID(),
     "key": Text(pattern=r"^[a-f0-9]{10}$"),

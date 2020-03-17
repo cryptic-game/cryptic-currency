@@ -4,7 +4,7 @@ from unittest import TestCase
 from mock.mock_loader import mock
 from resources import wallet
 from resources.errors import wallet_exists, can_access_wallet
-from schemes import scheme_default, scheme_send, scheme_reset
+from schemes import scheme_default, scheme_send, scheme_reset, scheme_transactions
 
 
 def import_app(name: str = "app"):
@@ -54,6 +54,7 @@ class TestApp(TestCase):
         expected_user_endpoints = [
             (["create"], {}, wallet.create),
             (["get"], scheme_default, wallet.get, wallet_exists, can_access_wallet),
+            (["transactions"], scheme_transactions, wallet.transactions, wallet_exists, can_access_wallet),
             (["list"], {}, wallet.list_wallets),
             (["send"], scheme_send, wallet.send, wallet_exists, can_access_wallet),
             (["reset"], scheme_reset, wallet.reset, wallet_exists),

@@ -32,7 +32,13 @@ def create(data: dict, user: str) -> dict:
 def get(data: dict, user: str, wallet: Wallet) -> dict:
     update_miner(wallet)
 
-    return {**wallet.serialize, "transactions": Transaction.get(wallet.source_uuid)}
+    return {**wallet.serialize, "transactions": Transaction.count_transactions(wallet.source_uuid)}
+
+
+@m.user_endpoint(path=["transactions"], requires=scheme_transactions)
+@register_errors(wallet_exists, can_access_wallet)
+def transactions(data: dict, user: str, wallet: Wallet) -> dict:
+    return {"transactions": Transaction.slice_transactions(wallet.source_uuid, data["offset"], data["count"])}
 
 
 @m.user_endpoint(path=["list"], requires={})
