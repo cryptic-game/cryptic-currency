@@ -16,7 +16,7 @@ class Transaction(wrapper.Base):
     send_amount: Union[Column, int] = Column(BigInteger, nullable=False, default=0)
     destination_uuid: Union[Column, str] = Column(String(36))
     usage: Union[Column, str] = Column(String(255), default="")
-    origin: Union[Column, Integer] = Column(BigInteger)
+    origin: Union[Column, Integer] = Column(Integer)
 
     @property
     def serialize(self) -> dict:

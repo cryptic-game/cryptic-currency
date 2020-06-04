@@ -2,7 +2,7 @@ import datetime
 from typing import Union
 from uuid import uuid4
 
-from sqlalchemy import Column, Integer, String, DateTime, BigInteger
+from sqlalchemy import Column, String, DateTime, BigInteger
 
 from app import wrapper
 
