@@ -2,7 +2,7 @@ import datetime
 from typing import Union
 from uuid import uuid4
 
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, String, DateTime, BigInteger
 
 from app import wrapper
 
@@ -13,7 +13,7 @@ class Wallet(wrapper.Base):
     time_stamp: Union[Column, datetime.datetime] = Column(DateTime, nullable=False)
     source_uuid: Union[Column, str] = Column(String(36), primary_key=True, unique=True)
     key: Union[Column, str] = Column(String(16))
-    amount: Union[Column, int] = Column(Integer, nullable=False, default=0)
+    amount: Union[Column, int] = Column(BigInteger, nullable=False, default=0)
     user_uuid: Union[Column, str] = Column(String(36), unique=True)
 
     @property
