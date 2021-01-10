@@ -1,4 +1,4 @@
-FROM python:3.7-alpine
+FROM python:3.8-alpine
 
 MAINTAINER faq@cryptic-game.net
 
@@ -14,5 +14,7 @@ ADD ./Pipfile.lock /app/
 RUN pipenv sync
 
 ADD . /app/
+
+RUN pipenv run test
 
 CMD pipenv run prod

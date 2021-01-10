@@ -1,4 +1,4 @@
-cryptic-currency [![Build Status](https://travis-ci.org/cryptic-game/cryptic-currency.svg?branch=master)](https://travis-ci.org/cryptic-game/cryptic-currency) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=cryptic-game_cryptic-currency&metric=coverage)](https://sonarcloud.io/dashboard?id=cryptic-game_cryptic-currency)
+cryptic-currency [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=cryptic-game_cryptic-currency&metric=coverage)](https://sonarcloud.io/dashboard?id=cryptic-game_cryptic-currency)
 ============
 
 The official currency microservice of Cryptic (https://cryptic-game.net/).
@@ -34,7 +34,7 @@ If you only need a mysql-server you can bring it up with:
 
 ## Docker-Hub
 
-This microservice is online on docker-hub (https://hub.docker.com/r/useto/cryptic-currency/).
+This microservice is online on docker-hub (https://hub.docker.com/r/crypticcp/cryptic-currency/).
 
 ## API 
 
