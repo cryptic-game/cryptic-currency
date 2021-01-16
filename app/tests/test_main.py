@@ -58,7 +58,7 @@ class TestApp(TestCase):
             (["list"], {}, wallet.list_wallets),
             (["send"], scheme_send, wallet.send, wallet_exists, can_access_wallet),
             (["reset"], scheme_reset, wallet.reset, wallet_exists),
-            (["delete"], scheme_default, wallet.delete, wallet_exists, can_access_wallet),
+            (["delete"], scheme_default, wallet.delete, wallet_exists),
         ]
 
         expected_ms_endpoints = [

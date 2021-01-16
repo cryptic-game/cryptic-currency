@@ -104,8 +104,11 @@ def reset(data: dict, user: str, wallet: Wallet) -> dict:
 
 
 @m.user_endpoint(path=["delete"], requires=scheme_default)
-@register_errors(wallet_exists, can_access_wallet)
+@register_errors(wallet_exists)
 def delete(data: dict, user: str, wallet: Wallet) -> dict:
+    if wallet.user_uuid != user:
+        return permission_denied
+
     m.contact_microservice("service", ["miner", "stop"], {"wallet_uuid": wallet.source_uuid})
 
     wrapper.session.delete(wallet)

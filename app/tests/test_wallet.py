@@ -178,7 +178,7 @@ class TestWallet(TestCase):
         test_wallet = mock.MagicMock()
 
         expected_result = success_scheme
-        actual_result = wallet.delete({}, "", test_wallet)
+        actual_result = wallet.delete({}, test_wallet.user_uuid, test_wallet)
 
         self.assertEqual(expected_result, actual_result)
         mock.m.contact_microservice.assert_called_with(
